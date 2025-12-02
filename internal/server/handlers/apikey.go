@@ -10,6 +10,7 @@ import (
 	"github.com/bestruirui/octopus/internal/server/middleware"
 	"github.com/bestruirui/octopus/internal/server/resp"
 	"github.com/bestruirui/octopus/internal/server/router"
+	"github.com/bestruirui/octopus/internal/utils/log"
 	"github.com/gin-gonic/gin"
 )
 
@@ -31,15 +32,18 @@ func init() {
 }
 
 func createAPIKey(c *gin.Context) {
-	apiKey := auth.GenerateAPIKey()
-	key := &model.APIKey{
-		APIKey: apiKey,
+	var req model.APIKey
+	if err := c.ShouldBindJSON(&req); err != nil {
+		resp.Error(c, http.StatusBadRequest, resp.ErrInvalidJSON)
+		return
 	}
-	if err := op.APIKeyCreate(key, c.Request.Context()); err != nil {
+	log.Infof("createAPIKey: %+v", req)
+	req.APIKey = auth.GenerateAPIKey()
+	if err := op.APIKeyCreate(&req, c.Request.Context()); err != nil {
 		resp.Error(c, http.StatusInternalServerError, err.Error())
 		return
 	}
-	resp.Success(c, key)
+	resp.Success(c, req)
 }
 
 func listAPIKey(c *gin.Context) {
