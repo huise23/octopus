@@ -2,12 +2,15 @@ package handlers
 
 import (
 	"net/http"
+	"strconv"
+	"time"
 
 	"github.com/bestruirui/octopus/internal/model"
 	"github.com/bestruirui/octopus/internal/op"
 	"github.com/bestruirui/octopus/internal/server/middleware"
 	"github.com/bestruirui/octopus/internal/server/resp"
 	"github.com/bestruirui/octopus/internal/server/router"
+	"github.com/bestruirui/octopus/internal/task"
 	"github.com/gin-gonic/gin"
 )
 
@@ -38,9 +41,20 @@ func setSetting(c *gin.Context) {
 		resp.Error(c, http.StatusBadRequest, err.Error())
 		return
 	}
+	hours, err := strconv.Atoi(setting.Value)
+	if err != nil {
+		resp.Error(c, http.StatusBadRequest, err.Error())
+		return
+	}
 	if err := op.SettingSetString(setting.Key, setting.Value); err != nil {
 		resp.Error(c, http.StatusInternalServerError, err.Error())
 		return
+	}
+	switch setting.Key {
+	case model.SettingKeyModelInfoUpdateInterval:
+		task.Update(string(setting.Key), time.Duration(hours)*time.Hour)
+	case model.SettingKeySyncLLMInterval:
+		task.Update(string(setting.Key), time.Duration(hours)*time.Hour)
 	}
 	resp.Success(c, setting)
 }
