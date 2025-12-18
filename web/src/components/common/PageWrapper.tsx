@@ -1,12 +1,15 @@
 'use client';
 
 import { motion, AnimatePresence } from 'motion/react';
-import { ReactNode, isValidElement, Children } from 'react';
+import { ReactNode, isValidElement, Children, forwardRef } from 'react';
 import { EASING } from '@/lib/animations/fluid-transitions';
 
 interface PageWrapperProps {
   children: ReactNode;
   className?: string;
+  onMouseDown?: (e: React.MouseEvent<HTMLDivElement>) => void;
+  onMouseMove?: (e: React.MouseEvent<HTMLDivElement>) => void;
+  onMouseUp?: () => void;
 }
 
 /**
@@ -24,37 +27,47 @@ function getDiminishingDelay(index: number): number {
  * 通用页面包装器，为页面内容添加流体动画效果
  * 使用递减延迟策略，避免元素过多时动画时间过长
  */
-export function PageWrapper({ children, className = 'space-y-6' }: PageWrapperProps) {
-  const childArray = Children.toArray(children);
+export const PageWrapper = forwardRef<HTMLDivElement, PageWrapperProps>(
+  ({ children, className = 'space-y-6', onMouseDown, onMouseMove, onMouseUp }, ref) => {
+    const childArray = Children.toArray(children);
 
-  return (
-    <motion.div className={className}>
-      <AnimatePresence>
-        {childArray.map((child, index) => {
-          const key = isValidElement(child) ? child.key : null;
+    return (
+      <motion.div
+        ref={ref}
+        className={className}
+        onMouseDown={onMouseDown}
+        onMouseMove={onMouseMove}
+        onMouseUp={onMouseUp}
+      >
+        <AnimatePresence>
+          {childArray.map((child, index) => {
+            const key = isValidElement(child) ? child.key : null;
 
-          return (
-            <motion.div
-              key={key}
-              initial={{ opacity: 0, y: 20 }}
-              animate={{ opacity: 1, y: 0 }}
-              exit={{
-                opacity: 0,
-                scale: 0.95,
-                transition: { duration: 0.3 }
-              }}
-              transition={{
-                duration: 0.5,
-                ease: EASING.easeOutExpo,
-                delay: getDiminishingDelay(index),
-              }}
-              layout
-            >
-              {child}
-            </motion.div>
-          );
-        })}
-      </AnimatePresence>
-    </motion.div>
-  );
-}
+            return (
+              <motion.div
+                key={key}
+                initial={{ opacity: 0, y: 20 }}
+                animate={{ opacity: 1, y: 0 }}
+                exit={{
+                  opacity: 0,
+                  scale: 0.95,
+                  transition: { duration: 0.3 }
+                }}
+                transition={{
+                  duration: 0.5,
+                  ease: EASING.easeOutExpo,
+                  delay: getDiminishingDelay(index),
+                }}
+                layout
+              >
+                {child}
+              </motion.div>
+            );
+          })}
+        </AnimatePresence>
+      </motion.div>
+    );
+  }
+);
+
+PageWrapper.displayName = 'PageWrapper';

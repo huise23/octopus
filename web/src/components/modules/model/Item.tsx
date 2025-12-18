@@ -1,6 +1,6 @@
 'use client';
 
-import { useState, useMemo } from 'react';
+import { useState, useMemo, useCallback } from 'react';
 import { Pencil, Trash2, Check, X, Loader, ArrowDownToLine, ArrowUpFromLine } from 'lucide-react';
 import { motion, AnimatePresence } from 'motion/react';
 import { useUpdateModel, useDeleteModel, type LLMInfo } from '@/api/endpoints/model';
@@ -10,9 +10,17 @@ import { toast } from '@/components/common/Toast';
 
 interface ModelItemProps {
     model: LLMInfo;
+    selectionMode?: boolean;
+    isSelected?: boolean;
+    onToggleSelection?: (modelName: string) => void;
 }
 
-export function ModelItem({ model }: ModelItemProps) {
+export function ModelItem({
+    model,
+    selectionMode = false,
+    isSelected = false,
+    onToggleSelection
+}: ModelItemProps) {
     const [isEditing, setIsEditing] = useState(false);
     const [confirmDelete, setConfirmDelete] = useState(false);
     const [editValues, setEditValues] = useState({
@@ -74,12 +82,45 @@ export function ModelItem({ model }: ModelItemProps) {
         });
     };
 
+    // 处理点击事件（选择模式下）
+    const handleCardClick = useCallback((e: React.MouseEvent) => {
+        if (selectionMode && onToggleSelection) {
+            e.preventDefault();
+            e.stopPropagation();
+            onToggleSelection(model.name);
+        }
+    }, [selectionMode, onToggleSelection, model.name]);
+
     return (
-        <div className="group relative h-28 rounded-3xl border border-border bg-card custom-shadow transition-all duration-300">
+        <div
+            className={`group relative h-28 rounded-3xl border border-border bg-card custom-shadow transition-all duration-300 ${
+                selectionMode ? 'cursor-pointer' : ''
+            } ${
+                isSelected ? 'border-primary ring-2 ring-primary/20 bg-primary/5' : ''
+            }`}
+            onClick={handleCardClick}
+        >
             <div className="p-4 h-full flex gap-2">
-                {/* Left: Avatar */}
-                <div className="flex-shrink-0 flex items-center">
-                    <ModelAvatar size={52} />
+                {/* Left: Avatar/Selection */}
+                <div className="flex-shrink-0 flex items-center relative">
+                    {selectionMode && (
+                        <div className="absolute inset-0 flex items-center justify-center z-10">
+                            <div className={`w-6 h-6 rounded-md border-2 flex items-center justify-center transition-all ${
+                                isSelected
+                                    ? 'bg-primary border-primary text-primary-foreground'
+                                    : 'border-border bg-background'
+                            }`}>
+                                {isSelected && (
+                                    <svg className="w-4 h-4" fill="currentColor" viewBox="0 0 20 20">
+                                        <path fillRule="evenodd" d="M16.707 5.293a1 1 0 010 1.414l-8 8a1 1 0 01-1.414 0l-4-4a1 1 0 011.414-1.414L8 12.586l7.293-7.293a1 1 0 011.414 0z" clipRule="evenodd" />
+                                    </svg>
+                                )}
+                            </div>
+                        </div>
+                    )}
+                    <div className={selectionMode ? 'opacity-50' : ''}>
+                        <ModelAvatar size={52} />
+                    </div>
                 </div>
 
                 {/* Middle: Content */}
@@ -113,13 +154,13 @@ export function ModelItem({ model }: ModelItemProps) {
 
                 {/* Right: Action buttons */}
                 <div className="flex-shrink-0 flex flex-col justify-between">
-                    <div className={`flex flex-col justify-between h-full ${isEditing || confirmDelete ? 'invisible' : ''}`}>
+                    <div className={`flex flex-col justify-between h-full ${isEditing || confirmDelete || selectionMode ? 'invisible' : ''}`}>
                         <motion.button
                             layoutId={`edit-btn-${model.name}`}
                             onClick={handleEditClick}
                             className="h-9 w-9 flex items-center justify-center rounded-lg bg-muted/60 text-muted-foreground transition-colors hover:bg-muted"
                             title="编辑"
-                            disabled={isEditing || confirmDelete}
+                            disabled={isEditing || confirmDelete || selectionMode}
                         >
                             <Pencil className="h-4 w-4" />
                         </motion.button>
@@ -129,7 +170,7 @@ export function ModelItem({ model }: ModelItemProps) {
                             onClick={handleDeleteClick}
                             className="h-9 w-9 flex items-center justify-center rounded-lg bg-destructive/10 text-destructive transition-colors hover:bg-destructive hover:text-destructive-foreground"
                             title="删除"
-                            disabled={isEditing || confirmDelete}
+                            disabled={isEditing || confirmDelete || selectionMode}
                         >
                             <Trash2 className="h-4 w-4" />
                         </motion.button>
