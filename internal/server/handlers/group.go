@@ -9,6 +9,7 @@ import (
 	"github.com/bestruirui/octopus/internal/server/middleware"
 	"github.com/bestruirui/octopus/internal/server/resp"
 	"github.com/bestruirui/octopus/internal/server/router"
+	"github.com/bestruirui/octopus/internal/server/worker"
 	"github.com/gin-gonic/gin"
 )
 
@@ -31,6 +32,10 @@ func init() {
 		AddRoute(
 			router.NewRoute("/delete/:id", http.MethodDelete).
 				Handle(deleteGroup),
+		).
+		AddRoute(
+			router.NewRoute("/auto-add-item", http.MethodPost).
+				Handle(autoAddGroupItem),
 		)
 }
 
@@ -82,4 +87,24 @@ func deleteGroup(c *gin.Context) {
 		return
 	}
 	resp.Success(c, "group deleted successfully")
+}
+
+func autoAddGroupItem(c *gin.Context) {
+	var req struct {
+		ID int `json:"id"`
+	}
+	if err := c.ShouldBindJSON(&req); err != nil {
+		resp.Error(c, http.StatusBadRequest, err.Error())
+		return
+	}
+	if req.ID <= 0 {
+		resp.Error(c, http.StatusBadRequest, "invalid id")
+		return
+	}
+	err := worker.AutoAddGroupItem(req.ID, c.Request.Context())
+	if err != nil {
+		resp.Error(c, http.StatusInternalServerError, err.Error())
+		return
+	}
+	resp.Success(c, nil)
 }
