@@ -87,19 +87,9 @@ export function ChannelForm({
                 model: formData.model,
                 enabled: formData.enabled,
                 proxy: formData.proxy,
-            },
-            {
-                onSuccess: (data) => {
-                    // 刷新成功后，将新获取的模型添加到当前选择中
-                    if (data && data.length > 0) {
-                        const currentModels = allModels;
-                        const newModels = data.filter(model => !currentModels.includes(model));
-                        if (newModels.length > 0) {
-                            handleModelsChange([...currentModels, ...newModels]);
-                        }
-                    }
-                },
             }
+            // 刷新成功后，模型会自动显示在下拉框中（通过 availableModels={fetchModel.data || []}）
+            // 不再自动选中所有模型，用户需要手动选择
         );
     };
 
@@ -189,6 +179,8 @@ export function ChannelForm({
                     placeholder={t('modelCustomPlaceholder') || "选择或添加模型..."}
                     disabled={false}
                     maxDisplayItems={8}
+                    availableModels={fetchModel.data || []}
+                    isLoading={fetchModel.isPending}
                 />
 
                 <input type="hidden" name="model" value={formData.model} />

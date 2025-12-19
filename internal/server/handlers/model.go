@@ -37,6 +37,10 @@ func init() {
 				Handle(deleteLLM),
 		).
 		AddRoute(
+			router.NewRoute("/batch-delete", http.MethodPost).
+				Handle(batchDeleteLLM),
+		).
+		AddRoute(
 			router.NewRoute("/update-price", http.MethodPost).
 				Handle(updateLLMPrice),
 		).
@@ -149,6 +153,31 @@ func deleteLLM(c *gin.Context) {
 		resp.Error(c, http.StatusInternalServerError, err.Error())
 		return
 	}
+	resp.Success(c, nil)
+}
+
+func batchDeleteLLM(c *gin.Context) {
+	var req struct {
+		Names []string `json:"names" binding:"required"`
+	}
+	if err := c.ShouldBindJSON(&req); err != nil {
+		resp.Error(c, http.StatusBadRequest, err.Error())
+		return
+	}
+
+	// 批量删除模型
+	var failedModels []string
+	for _, name := range req.Names {
+		if err := op.LLMDelete(name, c.Request.Context()); err != nil {
+			failedModels = append(failedModels, name)
+		}
+	}
+
+	if len(failedModels) > 0 {
+		resp.Error(c, http.StatusInternalServerError, "部分模型删除失败")
+		return
+	}
+
 	resp.Success(c, nil)
 }
 

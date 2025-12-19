@@ -135,10 +135,10 @@ export function useCreateModel() {
 
 /**
  * 删除 LLM 模型 Hook
- * 
+ *
  * @example
  * const deleteModel = useDeleteModel();
- * 
+ *
  * deleteModel.mutate('gpt-4'); // 删除名称为 'gpt-4' 的模型
  */
 export function useDeleteModel() {
@@ -154,6 +154,31 @@ export function useDeleteModel() {
         },
         onError: (error) => {
             logger.error('模型删除失败:', error);
+        },
+    });
+}
+
+/**
+ * 批量删除 LLM 模型 Hook
+ *
+ * @example
+ * const batchDeleteModel = useBatchDeleteModel();
+ *
+ * batchDeleteModel.mutate(['gpt-4', 'gpt-3.5-turbo']); // 批量删除多个模型
+ */
+export function useBatchDeleteModel() {
+    const queryClient = useQueryClient();
+
+    return useMutation({
+        mutationFn: async (names: string[]) => {
+            return apiClient.post<null>('/api/v1/model/batch-delete', { names });
+        },
+        onSuccess: () => {
+            logger.log('批量删除模型成功');
+            queryClient.invalidateQueries({ queryKey: ['models', 'list'] });
+        },
+        onError: (error) => {
+            logger.error('批量删除模型失败:', error);
         },
     });
 }

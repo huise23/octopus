@@ -1,7 +1,6 @@
 'use client';
 
 import { useState, useMemo, useRef, useCallback, useEffect } from 'react';
-import { useModelList } from '@/api/endpoints/model';
 import { Input } from '@/components/ui/input';
 import { Badge } from '@/components/ui/badge';
 import { Button } from '@/components/ui/button';
@@ -22,6 +21,8 @@ interface ModelMultiSelectProps {
     disabled?: boolean;
     className?: string;
     maxDisplayItems?: number;
+    availableModels?: string[]; // 可用的模型列表（从刷新按钮获取）
+    isLoading?: boolean; // 加载状态
 }
 
 // 虚拟化优化的模型列表项
@@ -59,7 +60,9 @@ export function ModelMultiSelect({
     placeholder = "选择模型...",
     disabled = false,
     className,
-    maxDisplayItems = 5
+    maxDisplayItems = 5,
+    availableModels = [],
+    isLoading = false
 }: ModelMultiSelectProps) {
     const [isOpen, setIsOpen] = useState(false);
     const [searchTerm, setSearchTerm] = useState('');
@@ -70,18 +73,15 @@ export function ModelMultiSelect({
     const inputRef = useRef<HTMLInputElement>(null);
     const listRef = useRef<HTMLDivElement>(null);
 
-    // 获取模型列表
-    const { data: models = [], isLoading, error } = useModelList();
-
     // 过滤和搜索模型
     const filteredModels = useMemo(() => {
-        if (!searchTerm.trim()) return models;
+        if (!searchTerm.trim()) return availableModels;
 
         const term = searchTerm.toLowerCase();
-        return models.filter(model =>
-            model.name.toLowerCase().includes(term)
+        return availableModels.filter(model =>
+            model.toLowerCase().includes(term)
         );
-    }, [models, searchTerm]);
+    }, [availableModels, searchTerm]);
 
     // 处理点击外部关闭下拉框
     useEffect(() => {
@@ -123,7 +123,7 @@ export function ModelMultiSelect({
             case 'Enter':
                 e.preventDefault();
                 if (highlightedIndex >= 0 && filteredModels[highlightedIndex]) {
-                    handleModelSelect(filteredModels[highlightedIndex].name);
+                    handleModelSelect(filteredModels[highlightedIndex]);
                 } else if (inputValue.trim()) {
                     handleAddCustomModel(inputValue.trim());
                 }
@@ -246,7 +246,7 @@ export function ModelMultiSelect({
                                 className="pl-10 pr-10"
                                 autoFocus
                             />
-                            {inputValue.trim() && !filteredModels.some(m => m.name === inputValue.trim()) && (
+                            {inputValue.trim() && !filteredModels.some(m => m === inputValue.trim()) && (
                                 <Button
                                     type="button"
                                     variant="ghost"
@@ -272,10 +272,6 @@ export function ModelMultiSelect({
                                     <Loader className="h-4 w-4 animate-spin mr-2" />
                                     <span className="text-sm text-muted-foreground">加载中...</span>
                                 </div>
-                            ) : error ? (
-                                <div className="p-4 text-center">
-                                    <span className="text-sm text-destructive">加载失败</span>
-                                </div>
                             ) : filteredModels.length === 0 ? (
                                 <div className="p-4 text-center">
                                     <span className="text-sm text-muted-foreground">
@@ -300,9 +296,9 @@ export function ModelMultiSelect({
                             ) : (
                                 filteredModels.slice(0, 100).map((model, index) => (
                                     <ModelItem
-                                        key={model.name}
-                                        model={model.name}
-                                        isSelected={selectedModels.includes(model.name)}
+                                        key={model}
+                                        model={model}
+                                        isSelected={selectedModels.includes(model)}
                                         onSelect={handleModelSelect}
                                         highlighted={index === highlightedIndex}
                                     />

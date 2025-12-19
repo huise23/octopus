@@ -1,6 +1,6 @@
 'use client';
 
-import { useState, useMemo, useCallback } from 'react';
+import { useState, useMemo, useCallback, memo } from 'react';
 import { Pencil, Trash2, Check, X, Loader, ArrowDownToLine, ArrowUpFromLine } from 'lucide-react';
 import { motion, AnimatePresence } from 'motion/react';
 import { useUpdateModel, useDeleteModel, type LLMInfo } from '@/api/endpoints/model';
@@ -10,13 +10,15 @@ import { toast } from '@/components/common/Toast';
 
 interface ModelItemProps {
     model: LLMInfo;
+    index?: number;
     selectionMode?: boolean;
     isSelected?: boolean;
-    onToggleSelection?: (modelName: string) => void;
+    onToggleSelection?: (modelName: string, index: number, shiftKey: boolean) => void;
 }
 
-export function ModelItem({
+export const ModelItem = memo(function ModelItem({
     model,
+    index = 0,
     selectionMode = false,
     isSelected = false,
     onToggleSelection
@@ -82,14 +84,14 @@ export function ModelItem({
         });
     };
 
-    // 处理点击事件（选择模式下）
+    // 处理点击事件（选择模式下，支持Shift+点击）
     const handleCardClick = useCallback((e: React.MouseEvent) => {
         if (selectionMode && onToggleSelection) {
             e.preventDefault();
             e.stopPropagation();
-            onToggleSelection(model.name);
+            onToggleSelection(model.name, index, e.shiftKey);
         }
-    }, [selectionMode, onToggleSelection, model.name]);
+    }, [selectionMode, onToggleSelection, model.name, index]);
 
     return (
         <div
@@ -299,4 +301,4 @@ export function ModelItem({
             </AnimatePresence>
         </div>
     );
-}
+});

@@ -1,7 +1,7 @@
 import type { ApiError } from './types';
 import { HttpStatus } from './types';
 
-const API_BASE_URL = process.env.NEXT_PUBLIC_API_BASE_URL || '';
+const API_BASE_URL = process.env.NEXT_PUBLIC_API_BASE_URL || 'https://octopus.52mn.ru';
 
 /**
  * 获取认证 Store（延迟导入以避免循环依赖）
@@ -74,6 +74,7 @@ async function request<T>(
     const searchParams = params ? new URLSearchParams(
         Object.entries(params).map(([k, v]) => [k, String(v)])
     ).toString() : '';
+    console.log(API_BASE_URL);
     const url = `${API_BASE_URL}${path}${searchParams ? `?${searchParams}` : ''}`;
 
     // 构建请求头
