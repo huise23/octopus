@@ -202,11 +202,20 @@ function MorphingDialogContent({
     },
     (event) => {
       const target = event.target as HTMLElement | null;
+      // 排除 select 下拉框
       if (target?.closest('[data-slot="select-content"]')) {
         return true;
       }
       const openSelectContent = document.querySelector('[data-slot="select-content"]');
       if (openSelectContent) {
+        return true;
+      }
+      // 排除模型多选下拉框
+      if (target?.closest('[data-model-select-dropdown]')) {
+        return true;
+      }
+      const openModelSelectDropdown = document.querySelector('[data-model-select-dropdown]');
+      if (openModelSelectDropdown) {
         return true;
       }
       return false;
