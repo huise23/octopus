@@ -21,6 +21,15 @@
 - 📊 **Analytics** - Comprehensive request statistics, token consumption, and cost tracking
 - 🎨 **Elegant UI** - Clean and beautiful web management panel
 
+## 🆕 What's New in v0.2.6
+
+- 📋 **Batch Model Selection** - Select multiple models with checkbox, supports Shift+click for range selection
+- 🗑️ **Batch Delete** - Delete multiple models at once with confirmation dialog
+- 🔍 **Quick Select** - Filter and select models by keyword pattern matching
+- 🔄 **Select All / Invert** - Quickly select or invert selection for current page
+- 📄 **Pagination with Animation** - Smooth page transitions with fluid animations
+- 🎯 **Channel Model Dropdown** - Improved model selection in channel form with multi-select support
+
 
 ## 🚀 Quick Start
 
