@@ -17,7 +17,7 @@
         "channel": "Channel",
         "group": "Group",
         "key": "Key",
-        "model": "Model",
+        "model": "Price",
         "log": "Log",
         "setting": "Setting"
     },
@@ -176,6 +176,8 @@
         },
         "detail": {
             "actions": {
+                "copyName": "Copy Name",
+                "delete": "Delete",
                 "confirmDelete": "Confirm Delete"
             }
         },
@@ -206,6 +208,28 @@
             "cacheWrite": "Cache Write",
             "submit": "Create",
             "submitting": "Creating..."
+        },
+        "toast": {
+            "updated": "Model price updated",
+            "updateFailed": "Update failed",
+            "deleted": "Model deleted",
+            "deleteFailed": "Delete failed"
+        },
+        "card": {
+            "inputCache": "Input/Cache",
+            "outputCache": "Output/Cache",
+            "edit": "Edit",
+            "delete": "Delete"
+        },
+        "overlay": {
+            "cancel": "Cancel",
+            "deleting": "Deleting...",
+            "confirmDelete": "Confirm Delete",
+            "input": "Input",
+            "output": "Output",
+            "cacheRead": "Cache Read",
+            "cacheWrite": "Cache Write",
+            "save": "Save"
         }
     },
     "log": {
@@ -298,7 +322,7 @@
             "typeOpenAIChat": "OpenAI Chat",
             "typeOpenAIResponse": "OpenAI Response",
             "typeAnthropic": "Anthropic",
-            "typeOneAPI": "OneAPI",
+            "typeGemini": "Gemini",
             "autoSync": "Auto Sync",
             "autoGroup": "Auto Group",
             "autoGroupNone": "None",
