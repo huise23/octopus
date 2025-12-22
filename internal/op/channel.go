@@ -38,6 +38,9 @@ func ChannelUpdate(channel *model.Channel, ctx context.Context) error {
 		return nil
 	}
 
+	// 检查是否是启用状态的变更
+	enabledChanged := oldChannel.Enabled != channel.Enabled
+
 	// 获取旧渠道的模型列表
 	oldModels := strings.Split(oldChannel.Model+","+oldChannel.CustomModel, ",")
 	oldModelsSet := make(map[string]bool)
@@ -93,6 +96,13 @@ func ChannelUpdate(channel *model.Channel, ctx context.Context) error {
 			if err := LLMDelete(modelName, ctx); err != nil {
 				log.Errorf("failed to delete unused model %s: %v", modelName, err)
 			}
+		}
+	}
+
+	// 如果渠道启用状态发生变化，需要刷新所有相关分组的缓存
+	if enabledChanged {
+		if err := refreshGroupsByChannelID(channel.ID, ctx); err != nil {
+			log.Errorf("failed to refresh groups for channel %d: %v", channel.ID, err)
 		}
 	}
 
@@ -231,5 +241,25 @@ func channelRefreshCache(ctx context.Context) error {
 	for _, channel := range channels {
 		channelCache.Set(channel.ID, channel)
 	}
+	return nil
+}
+
+// refreshGroupsByChannelID 刷新指定渠道相关的所有分组缓存
+func refreshGroupsByChannelID(channelID int, ctx context.Context) error {
+	// 获取所有包含该渠道的分组ID
+	var groupIDs []int
+	if err := db.GetDB().WithContext(ctx).
+		Model(&model.GroupItem{}).
+		Where("channel_id = ?", channelID).
+		Distinct("group_id").
+		Pluck("group_id", &groupIDs).Error; err != nil {
+		return fmt.Errorf("failed to get groups for channel %d: %w", channelID, err)
+	}
+
+	// 刷新这些分组的缓存
+	if err := groupRefreshCacheByIDs(groupIDs, ctx); err != nil {
+		return fmt.Errorf("failed to refresh group caches: %w", err)
+	}
+
 	return nil
 }

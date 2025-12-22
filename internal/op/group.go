@@ -43,7 +43,19 @@ func GroupGetMap(name string, ctx context.Context) (model.Group, error) {
 	if !ok {
 		return model.Group{}, fmt.Errorf("group not found")
 	}
-	return items, nil
+
+	// 过滤掉禁用渠道的 GroupItem
+	filteredItems := make([]model.GroupItem, 0, len(items.Items))
+	for _, item := range items.Items {
+		if channel, channelExists := channelCache.Get(item.ChannelID); channelExists && channel.Enabled {
+			filteredItems = append(filteredItems, item)
+		}
+	}
+
+	// 返回过滤后的分组
+	result := items
+	result.Items = filteredItems
+	return result, nil
 }
 
 func GroupCreate(group *model.Group, ctx context.Context) error {

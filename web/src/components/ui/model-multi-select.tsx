@@ -171,7 +171,7 @@ export function ModelMultiSelect({
         } else {
             onModelsChange([...selectedModels, modelName]);
         }
-        setSearchTerm('');
+        // 保留搜索词，不清空，让用户可以继续搜索和选择其他模型
         setHighlightedIndex(-1);
     }, [selectedModels, onModelsChange]);
 
@@ -185,7 +185,7 @@ export function ModelMultiSelect({
         if (modelName && !selectedModels.includes(modelName)) {
             onModelsChange([...selectedModels, modelName]);
             setInputValue('');
-            setSearchTerm('');
+            // 保留搜索词，不清空
             setHighlightedIndex(-1);
         }
     }, [selectedModels, onModelsChange]);
