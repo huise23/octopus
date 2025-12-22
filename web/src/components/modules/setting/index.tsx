@@ -9,6 +9,7 @@ import { SettingAccount } from './Account';
 import { SettingInfo } from './Info';
 import { SettingLLMSync } from './LLMSync';
 import { SettingLog } from './Log';
+import { SettingSensitive } from './Sensitive';
 
 export function Setting() {
     return (
@@ -27,6 +28,9 @@ export function Setting() {
             </div>
             <div>
                 <SettingLog key="setting-log" />
+            </div>
+            <div>
+                <SettingSensitive key="setting-sensitive" />
             </div>
             <div>
                 <SettingAPIKey key="setting-apikey" />

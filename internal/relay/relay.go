@@ -150,6 +150,9 @@ func parseRequest(inboundType inbound.InboundType, c *gin.Context) (*model.Inter
 		return nil, nil, err
 	}
 
+	// 敏感信息过滤
+	filterSensitiveContent(internalRequest)
+
 	return internalRequest, inAdapter, nil
 }
 
@@ -331,4 +334,39 @@ func (rc *relayContext) collectResponse() {
 
 	// 设置响应内容
 	rc.metrics.SetInternalResponse(internalResponse)
+}
+
+// filterSensitiveContent 过滤请求中的敏感信息
+func filterSensitiveContent(req *model.InternalLLMRequest) {
+	if !op.SensitiveFilterGetEnabled() {
+		return
+	}
+
+	totalFiltered := 0
+	for i := range req.Messages {
+		msg := &req.Messages[i]
+		// 过滤单一文本内容
+		if msg.Content.Content != nil {
+			filtered, count := op.SensitiveFilterText(*msg.Content.Content)
+			if count > 0 {
+				msg.Content.Content = &filtered
+				totalFiltered += count
+			}
+		}
+		// 过滤多部分内容
+		for j := range msg.Content.MultipleContent {
+			part := &msg.Content.MultipleContent[j]
+			if part.Text != nil {
+				filtered, count := op.SensitiveFilterText(*part.Text)
+				if count > 0 {
+					part.Text = &filtered
+					totalFiltered += count
+				}
+			}
+		}
+	}
+
+	if totalFiltered > 0 {
+		log.Warnf("filtered %d sensitive patterns from request", totalFiltered)
+	}
 }
