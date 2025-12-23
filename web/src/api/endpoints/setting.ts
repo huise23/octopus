@@ -17,6 +17,7 @@ export const SettingKey = {
     SyncLLMInterval: 'sync_llm_interval',
     RelayLogKeepEnabled: 'relay_log_keep_enabled',
     RelayLogKeepPeriod: 'relay_log_keep_period',
+    SensitiveFilterEnabled: 'sensitive_filter_enabled',
 } as const;
 
 /**
