@@ -4,44 +4,62 @@
 
 ### Octopus
 
-**A Simple, Beautiful, and Elegant LLM API Aggregation & Load Balancing Service for Individuals**
+**为个人打造的简单、美观、优雅的 LLM API 聚合与负载均衡服务**
 
- English | [简体中文](README_zh.md)
+简体中文 | [English](README_zh.md)
 
 </div>
 
+---
 
-## ✨ Features
+## 🍴 本 Fork 说明
 
-- 🔀 **Multi-Channel Aggregation** - Connect multiple LLM provider channels with unified management
-- ⚖️ **Load Balancing** - Automatic request distribution for stable and efficient service
-- 🔄 **Protocol Conversion** - Seamless conversion between OpenAI Chat / OpenAI Responses / Anthropic API formats
-- 💰 **Price Sync** - Automatic model pricing updates
-- 🔃 **Model Sync** - Automatic synchronization of available model lists with channels
-- 📊 **Analytics** - Comprehensive request statistics, token consumption, and cost tracking
-- 🎨 **Elegant UI** - Clean and beautiful web management panel
+本项目是 [bestruirui/octopus](https://github.com/bestruirui/octopus) 的一个中文优化版本。
 
-## 🆕 What's New in v0.2.6
+**主要修改：**
+- 🌏 **中文优先** - README 默认显示中文版本
+- ✅ **功能增强** - 基于 v0.2.6 进行以下改进：
+  - 🐛 修复禁用渠道和模型选择的缓存问题
+  - 🔧 修复 recharts TypeScript 类型兼容性问题
+  - 📋 模型批量选择与删除功能优化
+  - 🎯 渠道模型下拉多选列表改进
 
-- 📋 **Batch Model Selection** - Select multiple models with checkbox, supports Shift+click for range selection
-- 🗑️ **Batch Delete** - Delete multiple models at once with confirmation dialog
-- 🔍 **Quick Select** - Filter and select models by keyword pattern matching
-- 🔄 **Select All / Invert** - Quickly select or invert selection for current page
-- 📄 **Pagination with Animation** - Smooth page transitions with fluid animations
-- 🎯 **Channel Model Dropdown** - Improved model selection in channel form with multi-select support
+上游项目地址：https://github.com/bestruirui/octopus
+
+---
 
 
-## 🚀 Quick Start
+## ✨ 特性
 
-### 🐳 Docker
+- 🔀 **多渠道聚合** - 支持接入多个 LLM 供应商渠道，统一管理
+- ⚖️ **负载均衡** - 自动分配请求，确保服务稳定高效
+- 🔄 **协议互转** - 支持 OpenAI Chat / OpenAI Responses / Anthropic 三种 API 格式互相转换
+- 💰 **价格同步** - 自动更新模型价格
+- 🔃 **模型同步** - 自动与渠道同步可用模型列表，省心省力
+- 📊 **数据统计** - 全面的请求统计、Token 消耗、费用追踪
+- 🎨 **优雅界面** - 简洁美观的 Web 管理面板
 
-Run directly:
+## 🆕 v0.2.6 新功能
+
+- 📋 **批量选择模型** - 支持复选框多选，Shift+点击范围选择
+- 🗑️ **批量删除** - 一次删除多个模型，带确认对话框
+- 🔍 **快速选择** - 按关键词模式匹配筛选并选择模型
+- 🔄 **全选/反选** - 快速选择或反选当前页面的模型
+- 📄 **分页动画** - 流畅的页面切换动画效果
+- 🎯 **渠道模型下拉** - 改进的渠道表单模型选择，支持多选
+
+
+## 🚀 快速开始
+
+### 🐳 Docker 运行
+
+直接运行
 
 ```bash
 docker run -d --name octopus -v /path/to/data:/app/data -p 8080:8080 bestrui/octopus
 ```
 
-Or use docker compose:
+或者使用 docker compose 运行
 
 ```bash
 wget https://raw.githubusercontent.com/bestruirui/octopus/refs/heads/dev/docker-compose.yml
@@ -49,202 +67,203 @@ docker compose up -d
 ```
 
 
-### 📦 Download from Release
+### 📦 从 Release 下载
 
-Download the binary for your platform from [Releases](https://github.com/bestruirui/octopus/releases), then run:
+从 [Releases](https://github.com/bestruirui/octopus/releases) 下载对应平台的二进制文件，然后运行：
 
 ```bash
 ./octopus start
 ```
 
-### 🛠️ Build from Source
+### 🛠️ 源码运行
 
-**Requirements:**
+**环境要求：**
 - Go 1.24.4
 - Node.js 18+
-- npm or pnpm
+- npm 或 pnpm
 
 ```bash
-# Clone the repository
-git clone https://github.com/bestruirui/octopus.git
+# 克隆项目
+git clone https://github.com/huise23/octopus.git
 cd octopus
 
-# 1. Build frontend
+# 1. 构建前端
 cd web
 
-# Using npm
+# 使用 npm
 npm install
 npm run build
 
-# Or using pnpm
+# 或者使用 pnpm
 pnpm install
 pnpm run build
 
 cd ..
 
-# 2. Move frontend assets to static directory
+# 2. 移动前端产物到 static 目录
 mv web/out static/
 
-# 3. Start the backend service
+# 3. 启动后端服务
 go run . start
 ```
 
-> 💡 **Tip**: The frontend build artifacts are embedded into the Go binary, so you must build the frontend before starting the backend.
+> 💡 **提示**：前端构建产物会被嵌入到 Go 二进制文件中，所以必须先构建前端再启动后端。
 
-### 🔐 Default Credentials
+### 🔐 默认账户
 
-After first launch, visit http://localhost:8080 and log in to the management panel with:
+首次启动后，访问 http://localhost:8080 使用以下默认账户登录管理面板：
 
-- **Username**: `admin`
-- **Password**: `admin`
+- **用户名**：`admin`
+- **密码**：`admin`
 
-> ⚠️ **Security Notice**: Please change the default password immediately after first login.
+> ⚠️ **安全提示**：请在首次登录后立即修改默认密码。
 
-### 🌐 Environment Variables
+### 🌐 环境变量
 
-Customize configuration via environment variables:
+支持通过环境变量自定义配置：
 
-| Variable | Description | Default |
-|----------|-------------|---------|
-| `OCTOPUS_SERVER_PORT` | Server port | `8080` |
-| `OCTOPUS_SERVER_HOST` | Listen address | `0.0.0.0` |
-| `OCTOPUS_DATABASE_PATH` | Database path | `data/data.db` |
-| `OCTOPUS_LOGGING_LEVEL` | Log level | `info` |
+| 环境变量 | 说明 | 默认值 |
+|----------|------|--------|
+| `OCTOPUS_SERVER_PORT` | 服务端口 | `8080` |
+| `OCTOPUS_SERVER_HOST` | 监听地址 | `0.0.0.0` |
+| `OCTOPUS_DATABASE_PATH` | 数据库路径 | `data/data.db` |
+| `OCTOPUS_LOGGING_LEVEL` | 日志级别 | `info` |
 
 
-## 📸 Screenshots
+## 📸 界面预览
 
-### 🖥️ Desktop
-
-<div align="center">
-<table>
-<tr>
-<td align="center"><b>Dashboard</b></td>
-<td align="center"><b>Channel Management</b></td>
-<td align="center"><b>Group Management</b></td>
-</tr>
-<tr>
-<td><img src="web/public/screenshot/desktop-home.png" alt="Dashboard" width="400"></td>
-<td><img src="web/public/screenshot/desktop-channel.png" alt="Channel" width="400"></td>
-<td><img src="web/public/screenshot/desktop-group.png" alt="Group" width="400"></td>
-</tr>
-<tr>
-<td align="center"><b>Price Management</b></td>
-<td align="center"><b>Logs</b></td>
-<td align="center"><b>Settings</b></td>
-</tr>
-<tr>
-<td><img src="web/public/screenshot/desktop-price.png" alt="Price Management" width="400"></td>
-<td><img src="web/public/screenshot/desktop-log.png" alt="Logs" width="400"></td>
-<td><img src="web/public/screenshot/desktop-setting.png" alt="Settings" width="400"></td>
-</tr>
-</table>
-</div>
-
-### 📱 Mobile
+### 🖥️ 桌面端
 
 <div align="center">
 <table>
 <tr>
-<td align="center"><b>Home</b></td>
-<td align="center"><b>Channel</b></td>
-<td align="center"><b>Group</b></td>
-<td align="center"><b>Price</b></td>
-<td align="center"><b>Logs</b></td>
-<td align="center"><b>Settings</b></td>
+<td align="center"><b>首页</b></td>
+<td align="center"><b>渠道</b></td>
+<td align="center"><b>分组</b></td>
 </tr>
 <tr>
-<td><img src="web/public/screenshot/mobile-home.png" alt="Mobile Home" width="140"></td>
-<td><img src="web/public/screenshot/mobile-channel.png" alt="Mobile Channel" width="140"></td>
-<td><img src="web/public/screenshot/mobile-group.png" alt="Mobile Group" width="140"></td>
-<td><img src="web/public/screenshot/mobile-price.png" alt="Mobile Price" width="140"></td>
-<td><img src="web/public/screenshot/mobile-log.png" alt="Mobile Logs" width="140"></td>
-<td><img src="web/public/screenshot/mobile-setting.png" alt="Mobile Settings" width="140"></td>
+<td><img src="web/public/screenshot/desktop-home.png" alt="首页" width="400"></td>
+<td><img src="web/public/screenshot/desktop-channel.png" alt="渠道" width="400"></td>
+<td><img src="web/public/screenshot/desktop-group.png" alt="分组" width="400"></td>
+</tr>
+<tr>
+<td align="center"><b>价格</b></td>
+<td align="center"><b>日志</b></td>
+<td align="center"><b>设置</b></td>
+</tr>
+<tr>
+<td><img src="web/public/screenshot/desktop-price.png" alt="价格" width="400"></td>
+<td><img src="web/public/screenshot/desktop-log.png" alt="日志" width="400"></td>
+<td><img src="web/public/screenshot/desktop-setting.png" alt="设置" width="400"></td>
+</tr>
+</table>
+</div>
+
+### 📱 移动端
+
+<div align="center">
+<table>
+<tr>
+<td align="center"><b>首页</b></td>
+<td align="center"><b>渠道</b></td>
+<td align="center"><b>分组</b></td>
+<td align="center"><b>价格</b></td>
+<td align="center"><b>日志</b></td>
+<td align="center"><b>设置</b></td>
+</tr>
+<tr>
+<td><img src="web/public/screenshot/mobile-home.png" alt="移动端首页" width="140"></td>
+<td><img src="web/public/screenshot/mobile-channel.png" alt="移动端渠道" width="140"></td>
+<td><img src="web/public/screenshot/mobile-group.png" alt="移动端分组" width="140"></td>
+<td><img src="web/public/screenshot/mobile-price.png" alt="移动端价格" width="140"></td>
+<td><img src="web/public/screenshot/mobile-log.png" alt="移动端日志" width="140"></td>
+<td><img src="web/public/screenshot/mobile-setting.png" alt="移动端设置" width="140"></td>
 </tr>
 </table>
 </div>
 
 
-## 📖 Documentation
+## 📖 功能说明
 
-### 📡 Channel Management
+### 📡 渠道管理
 
-Channels are the basic configuration units for connecting to LLM providers.
+渠道是连接 LLM 供应商的基础配置单元。
 
-**Base URL Guide:**
+**Base URL 说明：**
 
-The program automatically appends API paths based on channel type. You only need to provide the base URL:
+程序会根据渠道类型自动补全 API 路径，您只需填写基础 URL 即可：
 
-| Channel Type | Auto-appended Path | Base URL | Full Request URL Example |
-|--------------|-------------------|----------|--------------------------|
+| 渠道类型 | 自动补全路径 | 填写 URL | 完整请求地址示例 |
+|----------|-------------|----------|-----------------|
 | OpenAI Chat | `/chat/completions` | `https://api.openai.com/v1` | `https://api.openai.com/v1/chat/completions` |
 | OpenAI Responses | `/responses` | `https://api.openai.com/v1` | `https://api.openai.com/v1/responses` |
 | Anthropic | `/messages` | `https://api.anthropic.com/v1` | `https://api.anthropic.com/v1/messages` |
 
-> 💡 **Tip**: No need to include specific API endpoint paths in the Base URL - the program handles this automatically.
+> 💡 **提示**：填写 Base URL 时无需包含具体的 API 端点路径，程序会自动处理。
 
 ---
 
-### 📁 Group Management
+### 📁 分组管理
 
-Groups aggregate multiple channels into a unified external model name.
+分组用于将多个渠道聚合为一个统一的对外模型名称。
 
-**Core Concepts:**
+**核心概念：**
 
-- **Group name** is the model name exposed by the program
-- When calling the API, set the `model` parameter to the group name
+- **分组名称** 即程序对外暴露的模型名称
+- 调用 API 时，将请求中的 `model` 参数设置为分组名称即可
 
-**Load Balancing Modes:**
+**负载均衡模式：**
 
-| Mode | Description |
-|------|-------------|
-| 🔄 **Round Robin** | Cycles through channels sequentially for each request |
-| 🎲 **Random** | Randomly selects an available channel for each request |
-| 🛡️ **Failover** | Prioritizes high-priority channels, switches to lower priority only on failure |
-| ⚖️ **Weighted** | Distributes requests based on configured channel weights |
+| 模式 | 说明 |
+|------|------|
+| 🔄 **轮询** | 每次请求依次切换到下一个渠道 |
+| 🎲 **随机** | 每次请求随机选择一个可用渠道 |
+| 🛡️ **故障转移** | 优先使用高优先级渠道，仅当其故障时才切换到低优先级渠道 |
+| ⚖️ **加权分配** | 根据渠道设置的权重比例分配请求 |
 
-> 💡 **Example**: Create a group named `gpt-4o`, add multiple providers' GPT-4o channels to it, then access all channels via a unified `model: gpt-4o`.
-
----
-
-### 💰 Price Management
-
-Manage model pricing information in the system.
-
-**Data Sources:**
-
-- The system periodically syncs model pricing data from [models.dev](https://github.com/sst/models.dev)
-- When creating a channel, if the channel contains models not in models.dev, the system automatically creates pricing information for those models on this page, so this page displays models that haven't had their prices fetched from upstream, allowing users to set prices manually
-- Manual creation of models that exist in models.dev is also supported for custom pricing
-
-**Price Priority:**
-
-| Priority | Source | Description |
-|:--------:|--------|-------------|
-| 🥇 High | This Page | Prices set by user in price management page |
-| 🥈 Low | models.dev | Auto-synced default prices |
-
-> 💡 **Tip**: To override a model's default price, simply set a custom price for it in the price management page.
+> 💡 **示例**：创建分组名称为 `gpt-4o`，将多个供应商的 GPT-4o 渠道加入该分组，即可通过统一的 `model: gpt-4o` 访问所有渠道。
 
 ---
 
-### ⚙️ Settings
+### 💰 价格管理
 
-Global system configuration.
+管理系统中的模型价格信息。
 
-**Statistics Save Interval (minutes):**
+**数据来源：**
 
-Since the program handles numerous statistics, writing to the database on every request would impact read/write performance. The program uses this strategy:
+- 系统会定期从 [models.dev](https://github.com/sst/models.dev) 同步更新模型价格数据
+- 当创建渠道时，若渠道包含的模型不在 models.dev 中，系统会自动在此页面创建该模型的价格信息,所以此页面显示的是没有从上游获取到价格的模型，用户可以手动设置价格
+- 也支持手动创建 models.dev 中已存在的模型，用于自定义价格
 
-- Statistics are first stored in **memory**
-- Periodically **batch-written** to the database at the configured interval
+**价格优先级：**
 
-> ⚠️ **Important**: When exiting the program, use proper shutdown methods (like `Ctrl+C` or sending `SIGTERM` signal) to ensure in-memory statistics are correctly written to the database. **Do NOT use `kill -9` or other forced termination methods**, as this may result in statistics data loss.
+| 优先级 | 来源 | 说明 |
+|:------:|------|------|
+| 🥇 高 | 本页面 | 用户在价格管理页面设置的价格 |
+| 🥈 低 | models.dev | 自动同步的默认价格 |
+
+> 💡 **提示**：如需覆盖某个模型的默认价格，只需在价格管理页面为其设置自定义价格即可。
 
 ---
 
-## 🤝 Acknowledgments
+### ⚙️ 设置
 
-- 🙏 [looplj/axonhub](https://github.com/looplj/axonhub) - The LLM API adaptation module in this project is directly derived from this repository
-- 📊 [sst/models.dev](https://github.com/sst/models.dev) - AI model database providing model pricing data
+系统全局配置项。
+
+**统计保存周期（分钟）：**
+
+由于程序涉及大量统计项目，若每次请求都直接写入数据库会影响读写性能。因此程序采用以下策略：
+
+- 统计数据先保存在 **内存** 中
+- 按设定的周期 **定期批量写入** 数据库
+
+> ⚠️ **重要提示**：退出程序时，请使用正常的关闭方式（如 `Ctrl+C` 或发送 `SIGTERM` 信号），以确保内存中的统计数据能正确写入数据库。**请勿使用 `kill -9` 等强制终止方式**，否则可能导致统计数据丢失。
+
+---
+
+## 🤝 致谢
+
+- 🙏 [looplj/axonhub](https://github.com/looplj/axonhub) - 本项目的 LLM API 适配模块直接源自该仓库的实现
+- 📊 [sst/models.dev](https://github.com/sst/models.dev) - AI 模型数据库，提供模型价格数据
+- 🌟 [bestruirui/octopus](https://github.com/bestruirui/octopus) - 本项目的主要上游仓库
 
