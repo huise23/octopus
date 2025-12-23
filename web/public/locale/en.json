@@ -175,6 +175,24 @@
             },
             "clearSuccess": "Logs cleared",
             "clearFailed": "Failed to clear logs"
+        },
+        "sensitive": {
+            "title": "Sensitive Data Filter",
+            "globalEnabled": "Enable Sensitive Data Filter",
+            "rules": "Filter Rules",
+            "addRule": "Add Rule",
+            "editRule": "Edit Rule",
+            "ruleDescription": "Add custom regex rules to filter sensitive information",
+            "ruleName": "Rule Name",
+            "pattern": "Regex Pattern",
+            "replacement": "Replacement Text",
+            "priority": "Priority",
+            "cancel": "Cancel",
+            "save": "Save",
+            "created": "Rule created",
+            "deleted": "Rule deleted",
+            "requiredFields": "Please fill in rule name and regex pattern",
+            "invalidPattern": "Invalid regex pattern"
         }
     },
     "group": {

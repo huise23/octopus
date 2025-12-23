@@ -15,6 +15,7 @@ const (
 	SettingKeySyncLLMInterval         SettingKey = "sync_llm_interval"          // LLM 同步间隔(小时)
 	SettingKeyRelayLogKeepPeriod      SettingKey = "relay_log_keep_period"      // 日志保存时间范围(天)
 	SettingKeyRelayLogKeepEnabled     SettingKey = "relay_log_keep_enabled"     // 是否保留历史日志
+	SettingKeySensitiveFilterEnabled  SettingKey = "sensitive_filter_enabled"   // 是否启用敏感信息过滤(全局开关)
 )
 
 type Setting struct {
@@ -29,6 +30,7 @@ func DefaultSettings() []Setting {
 		{Key: SettingKeySyncLLMInterval, Value: "24"},         // 默认24小时同步一次LLM
 		{Key: SettingKeyRelayLogKeepPeriod, Value: "7"},       // 默认日志保存7天
 		{Key: SettingKeyRelayLogKeepEnabled, Value: "true"},   // 默认保留历史日志
+		{Key: SettingKeySensitiveFilterEnabled, Value: "true"}, // 默认启用敏感信息过滤
 	}
 }
 
@@ -40,9 +42,9 @@ func (s *Setting) Validate() error {
 			return fmt.Errorf("model info update interval must be an integer")
 		}
 		return nil
-	case SettingKeyRelayLogKeepEnabled:
+	case SettingKeyRelayLogKeepEnabled, SettingKeySensitiveFilterEnabled:
 		if s.Value != "true" && s.Value != "false" {
-			return fmt.Errorf("relay log keep enabled must be true or false")
+			return fmt.Errorf("value must be true or false")
 		}
 		return nil
 	case SettingKeyProxyURL:

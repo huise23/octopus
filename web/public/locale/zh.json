@@ -175,6 +175,24 @@
             },
             "clearSuccess": "日志已清空",
             "clearFailed": "清空失败"
+        },
+        "sensitive": {
+            "title": "敏感信息过滤",
+            "globalEnabled": "启用敏感信息过滤",
+            "rules": "过滤规则",
+            "addRule": "添加规则",
+            "editRule": "编辑规则",
+            "ruleDescription": "添加自定义正则表达式规则来过滤敏感信息",
+            "ruleName": "规则名称",
+            "pattern": "正则表达式",
+            "replacement": "替换文本",
+            "priority": "优先级",
+            "cancel": "取消",
+            "save": "保存",
+            "created": "规则已创建",
+            "deleted": "规则已删除",
+            "requiredFields": "请填写规则名称和正则表达式",
+            "invalidPattern": "无效的正则表达式"
         }
     },
     "group": {

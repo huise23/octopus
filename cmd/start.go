@@ -41,6 +41,8 @@ var startCmd = &cobra.Command{
 			return
 		}
 
+		op.SensitiveFilterInit()
+
 		if err := server.Start(); err != nil {
 			log.Errorf("server start error: %v", err)
 			return
