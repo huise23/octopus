@@ -52,7 +52,7 @@ jobs:
           files: build/archives/*
           prerelease: false
           tag_name: ${{ steps.tag.outputs.TAG_NAME }}
-          overwrite: true
+          overwrite_files: true
           fail_on_unmatched_files: true
 
       - name: Docker meta (Debian)
