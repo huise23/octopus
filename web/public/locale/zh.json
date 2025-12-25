@@ -198,6 +198,7 @@
     "group": {
         "toast": {
             "updated": "更新成功",
+            "updateFailed": "更新失败",
             "deleted": "删除成功",
             "autoAddFailed": "自动添加失败"
         },
@@ -205,6 +206,12 @@
             "title": "创建分组",
             "submit": "创建",
             "submitting": "创建中..."
+        },
+        "edit": {
+            "title": "编辑分组",
+            "save": "保存",
+            "saving": "保存中...",
+            "cancel": "取消"
         },
         "card": {
             "empty": "暂无规则"
@@ -218,6 +225,7 @@
         },
         "form": {
             "name": "分组名称",
+            "nameRequired": "分组名称不能为空",
             "items": "模型名称",
             "addItem": "添加模型",
             "autoAdd": "自动添加",

@@ -3,7 +3,7 @@
 import { useState, useMemo, useCallback, useEffect, useRef } from 'react';
 import { Trash2, Layers, X, Plus, Check, Copy, Loader2, Wand2 } from 'lucide-react';
 import { Reorder, motion, AnimatePresence } from 'motion/react';
-import { type Group, useAutoAddGroupItem, useDeleteGroup, useUpdateGroup } from '@/api/endpoints/group';
+import { type Group, useAutoAddGroupItem, useDeleteGroup, useUpdateGroup, type GroupKeyword, type GroupMatchMode } from '@/api/endpoints/group';
 import { useModelChannelList, type LLMChannel } from '@/api/endpoints/model';
 import { useTranslations } from 'next-intl';
 import { cn } from '@/lib/utils';
@@ -11,6 +11,8 @@ import { toast } from '@/components/common/Toast';
 import { Tooltip, TooltipContent, TooltipTrigger } from '@/components/animate-ui/components/animate/tooltip';
 import { MemberItem, AddMemberRow, type SelectedMember } from './components';
 import { buildChannelNameByModelKey, modelChannelKey } from './utils';
+import { MorphingDialog, MorphingDialogContent, MorphingDialogTrigger, MorphingDialogContainer } from '@/components/ui/morphing-dialog';
+import { CreateDialogContent } from './Create';
 
 export function GroupCard({ group }: { group: Group }) {
     const t = useTranslations('group');
@@ -92,10 +94,6 @@ export function GroupCard({ group }: { group: Group }) {
         if (member?.item_id !== undefined) updateGroup.mutate({ id: group.id!, items_to_delete: [member.item_id] }, { onSuccess });
     }, [members, group.id, updateGroup, onSuccess]);
 
-    const handleNameChange = useCallback((name: string) => {
-        if (name && name !== group.name) updateGroup.mutate({ id: group.id!, name }, { onSuccess });
-    }, [group.id, group.name, updateGroup, onSuccess]);
-
     const handleDragStart = useCallback(() => { isDragging.current = true; }, []);
 
     const handleDragEnd = useCallback(() => {
@@ -135,29 +133,25 @@ export function GroupCard({ group }: { group: Group }) {
     return (
         <article className="flex flex-col rounded-3xl border border-border bg-card text-card-foreground p-4 custom-shadow">
             <header className="flex items-start justify-between mb-3 relative overflow-visible rounded-xl -mx-1 px-1 -my-1 py-1">
-                <div className="relative flex-1 mr-2 min-w-0 group/title">
-                    {/* Placeholder to maintain layout */}
-                    <span className="text-lg font-bold truncate block invisible" aria-hidden="true">{group.name}</span>
-                    {/* Actual editable title with hover expansion */}
-                    <h3
-                        contentEditable
-                        suppressContentEditableWarning
-                        onBlur={(e) => handleNameChange(e.currentTarget.textContent || '')}
-                        className={cn(
-                            "text-lg font-bold outline-none truncate absolute inset-0 rounded-lg",
-                            "transition-all duration-200 ease-out origin-left",
-                            "group-hover/title:whitespace-normal group-hover/title:wrap-break-word group-hover/title:overflow-visible group-hover/title:bottom-auto",
-                            "group-hover/title:bg-popover group-hover/title:backdrop-blur-md group-hover/title:shadow-xl group-hover/title:rounded-2xl",
-                            "group-hover/title:px-3 group-hover/title:py-2 group-hover/title:-mx-3 group-hover/title:-my-2",
-                            "group-hover/title:z-50 group-hover/title:scale-105 group-hover/title:border group-hover/title:border-border/50",
-                            "focus:whitespace-normal focus:wrap-break-word focus:overflow-visible focus:bottom-auto",
-                            "focus:bg-popover focus:backdrop-blur-md focus:shadow-xl focus:rounded-2xl",
-                            "focus:px-3 focus:py-2 focus:-mx-3 focus:-my-2",
-                            "focus:z-50 focus:scale-105 focus:border focus:border-primary/50"
-                        )}
-                    >
-                        {group.name}
-                    </h3>
+                <div className="flex-1 mr-2 min-w-0">
+                    <MorphingDialog>
+                        <MorphingDialogTrigger>
+                            <button
+                                type="button"
+                                className={cn(
+                                    "text-lg font-bold truncate text-left w-full rounded-lg p-2 -m-2",
+                                    "transition-colors duration-200 hover:bg-muted/50"
+                                )}
+                            >
+                                {group.name}
+                            </button>
+                        </MorphingDialogTrigger>
+                        <MorphingDialogContainer>
+                            <MorphingDialogContent className="w-full max-w-xl bg-card text-card-foreground px-6 py-4 rounded-3xl custom-shadow max-h-[90vh] overflow-y-auto">
+                                <CreateDialogContent editGroup={group} />
+                            </MorphingDialogContent>
+                        </MorphingDialogContainer>
+                    </MorphingDialog>
                 </div>
 
                 <div className="flex items-center gap-1 shrink-0">

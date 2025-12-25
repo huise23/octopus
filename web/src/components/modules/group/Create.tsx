@@ -1,6 +1,6 @@
 'use client';
 
-import { useMemo, useState, useCallback, type FormEvent } from 'react';
+import { useMemo, useState, useCallback, type FormEvent, useEffect } from 'react';
 import { Plus, Layers, Sparkles } from 'lucide-react';
 import { Reorder } from 'motion/react';
 import {
@@ -9,7 +9,7 @@ import {
     MorphingDialogDescription,
     useMorphingDialog,
 } from '@/components/ui/morphing-dialog';
-import { useCreateGroup, type GroupItem, type GroupMode } from '@/api/endpoints/group';
+import { useCreateGroup, useUpdateGroup, type Group, type GroupItem, type GroupMode, type GroupKeyword, type GroupMatchMode } from '@/api/endpoints/group';
 import { useModelChannelList, type LLMChannel } from '@/api/endpoints/model';
 import { useTranslations } from 'next-intl';
 import { Button } from '@/components/ui/button';
@@ -17,7 +17,8 @@ import { Input } from '@/components/ui/input';
 import { Field, FieldLabel, FieldGroup } from '@/components/ui/field';
 import { cn } from '@/lib/utils';
 import { MemberItem, AddMemberRow, type SelectedMember } from './components';
-import { matchesGroupName, memberKey, normalizeKey } from './utils';
+import { matchesGroupName, memberKey, normalizeKey, buildChannelNameByModelKey, modelChannelKey } from './utils';
+import { KeywordConfig } from './KeywordConfig';
 
 function MembersSection({
     members,
@@ -160,16 +161,59 @@ function MembersSection({
     );
 }
 
-export function CreateDialogContent() {
+export function CreateDialogContent({ editGroup }: { editGroup?: Group }) {
     const { setIsOpen } = useMorphingDialog();
     const createGroup = useCreateGroup();
+    const updateGroup = useUpdateGroup();
     const t = useTranslations('group');
     const { data: modelChannels = [] } = useModelChannelList();
+
+    // 是否为编辑模式
+    const isEdit = !!editGroup;
 
     const [groupName, setGroupName] = useState('');
     const [mode, setMode] = useState<GroupMode>(1);
     const [selectedMembers, setSelectedMembers] = useState<SelectedMember[]>([]);
     const [removingIds, setRemovingIds] = useState<Set<string>>(new Set());
+    const [keywords, setKeywords] = useState<GroupKeyword[]>([]);
+    const [matchMode, setMatchMode] = useState<GroupMatchMode>(0);
+
+    // 编辑模式初始化
+    useEffect(() => {
+        if (isEdit && editGroup) {
+            setGroupName(editGroup.name);
+            setMode(editGroup.mode);
+            setMatchMode(editGroup.match_mode ?? 0);
+
+            // 解析关键字
+            try {
+                if (editGroup.keywords) {
+                    const parsedKeywords = JSON.parse(editGroup.keywords) as GroupKeyword[];
+                    setKeywords(Array.isArray(parsedKeywords) ? parsedKeywords : []);
+                } else {
+                    setKeywords([]);
+                }
+            } catch (error) {
+                console.error('解析关键字失败:', error);
+                setKeywords([]);
+            }
+
+            // 初始化成员列表
+            if (editGroup.items && editGroup.items.length > 0) {
+                const channelNameByKey = buildChannelNameByModelKey(modelChannels);
+                const members: SelectedMember[] = editGroup.items
+                    .sort((a, b) => a.priority - b.priority)
+                    .map((item) => ({
+                        id: `${item.channel_id}-${item.model_name}-${item.id || 0}`,
+                        name: item.model_name,
+                        channel_id: item.channel_id,
+                        channel_name: channelNameByKey.get(modelChannelKey(item.channel_id, item.model_name)) ?? `Channel ${item.channel_id}`,
+                        weight: item.weight,
+                    }));
+                setSelectedMembers(members);
+            }
+        }
+    }, [isEdit, editGroup, modelChannels]);
 
     const groupKey = useMemo(() => normalizeKey(groupName), [groupName]);
 
@@ -225,27 +269,78 @@ export function CreateDialogContent() {
     const handleSubmit = (event: FormEvent<HTMLFormElement>) => {
         event.preventDefault();
 
-        const items: GroupItem[] = selectedMembers.map((member, index) => ({
-            channel_id: member.channel_id,
-            model_name: member.name,
-            priority: index + 1,
-            weight: member.weight ?? 1,
-        }));
+        // 准备关键字数据
+        const keywordsJson = keywords.length > 0 ? JSON.stringify(keywords) : '';
 
-        createGroup.mutate(
-            {
-                name: groupName,
-                mode,
-                items,
-            },
-            {
-                onSuccess: () => {
-                    setGroupName('');
-                    setSelectedMembers([]);
-                    setIsOpen(false);
-                },
+        if (isEdit && editGroup) {
+            // 编辑模式
+            const updates: any = { id: editGroup.id! };
+
+            // 检查名称变更
+            if (groupName !== editGroup.name) {
+                updates.name = groupName;
             }
-        );
+
+            // 检查模式变更
+            if (mode !== editGroup.mode) {
+                updates.mode = mode;
+            }
+
+            // 检查关键字变更
+            const currentKeywordsJson = editGroup.keywords || '';
+            if (keywordsJson !== currentKeywordsJson) {
+                updates.keywords = keywordsJson;
+            }
+
+            // 检查匹配模式变更
+            const currentMatchMode = editGroup.match_mode ?? 0;
+            if (matchMode !== currentMatchMode) {
+                updates.match_mode = matchMode;
+            }
+
+            // 只在有变更时才更新
+            if (Object.keys(updates).length > 1) {
+                updateGroup.mutate(updates, {
+                    onSuccess: () => {
+                        setGroupName('');
+                        setSelectedMembers([]);
+                        setKeywords([]);
+                        setMatchMode(0);
+                        setIsOpen(false);
+                    },
+                });
+            } else {
+                // 没有变更，直接关闭
+                setIsOpen(false);
+            }
+        } else {
+            // 创建模式
+            const items: GroupItem[] = selectedMembers.map((member, index) => ({
+                channel_id: member.channel_id,
+                model_name: member.name,
+                priority: index + 1,
+                weight: member.weight ?? 1,
+            }));
+
+            createGroup.mutate(
+                {
+                    name: groupName,
+                    mode,
+                    keywords: keywordsJson,
+                    match_mode: matchMode,
+                    items,
+                },
+                {
+                    onSuccess: () => {
+                        setGroupName('');
+                        setSelectedMembers([]);
+                        setKeywords([]);
+                        setMatchMode(0);
+                        setIsOpen(false);
+                    },
+                }
+            );
+        }
     };
 
     const isValid = groupKey.length > 0 && selectedMembers.length > 0;
@@ -255,7 +350,7 @@ export function CreateDialogContent() {
             <MorphingDialogTitle>
                 <header className="mb-5 flex items-center justify-between">
                     <h2 className="text-2xl font-bold text-card-foreground">
-                        {t('create.title')}
+                        {isEdit ? (t('edit.title') || '编辑分组') : t('create.title')}
                     </h2>
                     <MorphingDialogClose
                         className="relative right-0 top-0"
@@ -298,6 +393,15 @@ export function CreateDialogContent() {
                             ))}
                         </div>
 
+                        {/* 关键字配置 */}
+                        <KeywordConfig
+                            keywords={keywords}
+                            matchMode={matchMode}
+                            onKeywordsChange={setKeywords}
+                            onMatchModeChange={setMatchMode}
+                            className="border rounded-xl p-4 bg-muted/30"
+                        />
+
                         {/* 模型区域（包含添加功能） */}
                         <MembersSection
                             members={selectedMembers}
@@ -315,10 +419,13 @@ export function CreateDialogContent() {
                         {/* Submit Button */}
                         <Button
                             type="submit"
-                            disabled={!isValid || createGroup.isPending}
+                            disabled={!isValid || createGroup.isPending || updateGroup.isPending}
                             className="w-full rounded-xl h-11"
                         >
-                            {createGroup.isPending ? t('create.submitting') : t('create.submit')}
+                            {isEdit
+                                ? (updateGroup.isPending ? (t('edit.saving') || '保存中...') : (t('edit.save') || '保存'))
+                                : (createGroup.isPending ? t('create.submitting') : t('create.submit'))
+                            }
                         </Button>
                     </FieldGroup>
                 </form>

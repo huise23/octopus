@@ -198,6 +198,7 @@
     "group": {
         "toast": {
             "updated": "Updated successfully",
+            "updateFailed": "Update failed",
             "deleted": "Deleted successfully",
             "autoAddFailed": "Auto add failed"
         },
@@ -205,6 +206,12 @@
             "title": "Create Group",
             "submit": "Create",
             "submitting": "Creating..."
+        },
+        "edit": {
+            "title": "Edit Group",
+            "save": "Save",
+            "saving": "Saving...",
+            "cancel": "Cancel"
         },
         "card": {
             "empty": "No rules"
@@ -218,6 +225,7 @@
         },
         "form": {
             "name": "Group Name",
+            "nameRequired": "Group name is required",
             "items": "Model Names",
             "addItem": "Add Model",
             "autoAdd": "Auto Add",

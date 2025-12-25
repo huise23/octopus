@@ -72,6 +72,23 @@ func ChannelUpdate(channel *model.Channel, ctx context.Context) error {
 	}
 	channelCache.Set(channel.ID, *channel)
 
+	// 【新增】删除分组中对应的 GroupItem
+	if len(removedModels) > 0 {
+		removedKeys := make([]model.GroupIDAndLLMName, len(removedModels))
+		for i, modelName := range removedModels {
+			removedKeys[i] = model.GroupIDAndLLMName{
+				ChannelID: channel.ID,
+				ModelName: modelName,
+			}
+		}
+
+		if err := GroupItemBatchDelByChannelAndModels(removedKeys, ctx); err != nil {
+			log.Errorf("failed to remove group items for removed models: %v", err)
+		} else {
+			log.Infof("removed %d group items for channel %s removed models", len(removedKeys), channel.Name)
+		}
+	}
+
 	// 检查并删除不再使用的模型
 	for _, modelName := range removedModels {
 		isUsedByOtherChannel := false
