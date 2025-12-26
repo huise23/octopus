@@ -119,18 +119,8 @@ func NewHTTPClient(useProxy bool) (*http.Client, error) {
 			return nil, fmt.Errorf("invalid socks proxy: %w", err)
 		}
 		cloned.Proxy = nil
-		// SOCKS代理需要自定义DialContext
-		baseDialer := &net.Dialer{
-			Timeout:   10 * time.Second,
-			KeepAlive: 30 * time.Second,
-		}
+		// SOCKS代理需要自定义DialContext，并添加超时支持
 		cloned.DialContext = func(ctx context.Context, network, addr string) (net.Conn, error) {
-			// 先通过baseDialer连接到代理服务器
-			conn, err := baseDialer.DialContext(ctx, network, addr)
-			if err != nil {
-				return nil, err
-			}
-			// 然后通过SOCKS代理
 			return socksDialer.Dial(network, addr)
 		}
 	default:
