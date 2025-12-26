@@ -5,6 +5,7 @@ import (
 	"fmt"
 	"io"
 	"net/http"
+	"slices"
 	"strings"
 	"time"
 
@@ -55,11 +56,20 @@ func Handler(inboundType inbound.InboundType, c *gin.Context) {
 	if err != nil {
 		return
 	}
+	supportedModels := c.GetString("supported_models")
+	if supportedModels != "" {
+		supportedModelsArray := strings.Split(supportedModels, ",")
+		if !slices.Contains(supportedModelsArray, internalRequest.Model) {
+			resp.Error(c, http.StatusBadRequest, "model not supported")
+			return
+		}
+	}
 
 	// 初始化统计和日志
+	apiKeyID := c.GetInt("api_key_id")
 	metrics := NewRelayMetrics(internalRequest.Model)
 	metrics.SetInternalRequest(internalRequest)
-
+	metrics.SetAPIKeyID(apiKeyID)
 	// 获取通道分组
 	group, err := op.GroupGetMap(internalRequest.Model, c.Request.Context())
 	if err != nil {
@@ -89,6 +99,12 @@ func Handler(inboundType inbound.InboundType, c *gin.Context) {
 		if err != nil {
 			log.Warnf("failed to get channel: %v", err)
 			lastErr = err
+			item = b.Next(group.Items, item)
+			continue
+		}
+		if channel.Enabled == false {
+			log.Warnf("channel %s is disabled", channel.Name)
+			lastErr = fmt.Errorf("channel %s is disabled", channel.Name)
 			item = b.Next(group.Items, item)
 			continue
 		}

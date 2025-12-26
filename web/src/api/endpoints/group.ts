@@ -39,8 +39,7 @@ export interface Group {
     id?: number;
     name: string;
     mode: GroupMode;
-    keywords?: string; // JSON 格式的关键字列表
-    match_mode?: GroupMatchMode; // 匹配模式
+    match_regex: string;
     items?: GroupItem[];
 }
 
@@ -70,8 +69,7 @@ export interface GroupUpdateRequest {
     id: number;
     name?: string;                        // 仅在名称变更时发送
     mode?: GroupMode;                     // 仅在模式变更时发送
-    keywords?: string;                    // 仅在关键字变更时发送
-    match_mode?: GroupMatchMode;          // 仅在匹配模式变更时发送
+    match_regex?: string;                 // 仅在匹配正则变更时发送
     items_to_add?: GroupItemAddRequest[];    // 新增的 items
     items_to_update?: GroupItemUpdateRequest[]; // 更新的 items (priority 变更)
     items_to_delete?: number[];              // 删除的 item IDs

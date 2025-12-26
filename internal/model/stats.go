@@ -11,12 +11,12 @@ type StatsMetrics struct {
 }
 
 type StatsTotal struct {
-	ID int `gorm:"primaryKey;check:id=1"`
+	ID int `gorm:"primaryKey"`
 	StatsMetrics
 }
 
 type StatsHourly struct {
-	Hour int    `json:"hour" gorm:"primaryKey;check:hour between 0 and 23"`
+	Hour int    `json:"hour" gorm:"primaryKey"`
 	Date string `json:"date" gorm:"not null"` // 记录最后更新日期，格式：20060102
 	StatsMetrics
 }
@@ -35,6 +35,11 @@ type StatsModel struct {
 
 type StatsChannel struct {
 	ChannelID int `json:"channel_id" gorm:"primaryKey"`
+	StatsMetrics
+}
+
+type StatsAPIKey struct {
+	APIKeyID int `json:"api_key_id" gorm:"primaryKey"`
 	StatsMetrics
 }
 

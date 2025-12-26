@@ -50,6 +50,7 @@
 - 🔃 **模型同步** - 自动与渠道同步可用模型列表，省心省力
 - 📊 **数据统计** - 全面的请求统计、Token 消耗、费用追踪
 - 🎨 **优雅界面** - 简洁美观的 Web 管理面板
+- 🗄️ **多数据库支持** - 支持 SQLite、MySQL、PostgreSQL
 
 
 ## 🚀 快速开始
@@ -131,6 +132,70 @@ go run . start
 | `OCTOPUS_SERVER_HOST` | 监听地址 | `0.0.0.0` |
 | `OCTOPUS_DATABASE_PATH` | 数据库路径 | `data/data.db` |
 | `OCTOPUS_LOGGING_LEVEL` | 日志级别 | `info` |
+
+### ⚙️ 配置文件
+
+配置文件默认位于 `data/config.json`，首次启动时自动生成。
+
+**完整配置示例：**
+
+```json
+{
+  "server": {
+    "host": "0.0.0.0",
+    "port": 8080
+  },
+  "database": {
+    "type": "sqlite",
+    "path": "data/data.db"
+  },
+  "log": {
+    "level": "info"
+  }
+}
+```
+
+**配置选项说明：**
+
+| 选项 | 说明 | 默认值 |
+|------|------|--------|
+| `server.host` | 监听地址 | `0.0.0.0` |
+| `server.port` | 服务端口 | `8080` |
+| `database.type` | 数据库类型 | `sqlite` |
+| `database.path` | 数据库连接字符串 | `data/data.db` |
+| `log.level` | 日志级别 | `info` |
+
+**数据库配置：**
+
+支持三种数据库类型：
+
+| 类型 | `database.type` | `database.path` 格式 |
+|------|-----------------|----------------------|
+| SQLite | `sqlite` | `data/data.db` |
+| MySQL | `mysql` | `user:password@tcp(host:port)/dbname` |
+| PostgreSQL | `postgres` | `host=host port=port user=user password=password dbname=dbname sslmode=disable` |
+
+**MySQL 配置示例：**
+
+```json
+{
+  "database": {
+    "type": "mysql",
+    "path": "root:password@tcp(127.0.0.1:3306)/octopus"
+  }
+}
+```
+
+**PostgreSQL 配置示例：**
+
+```json
+{
+  "database": {
+    "type": "postgres",
+    "path": "host=127.0.0.1 port=5432 user=postgres password=postgres dbname=octopus sslmode=disable"
+  }
+}
+```
 
 
 ## 📸 界面预览

@@ -2,6 +2,7 @@ package handlers
 
 import (
 	"net/http"
+	"strings"
 
 	"github.com/bestruirui/octopus/internal/model"
 	"github.com/bestruirui/octopus/internal/op"
@@ -10,6 +11,7 @@ import (
 	"github.com/bestruirui/octopus/internal/server/resp"
 	"github.com/bestruirui/octopus/internal/server/router"
 	"github.com/gin-gonic/gin"
+	"github.com/samber/lo"
 )
 
 func init() {
@@ -62,6 +64,20 @@ func getModelList(c *gin.Context) {
 		resp.Error(c, http.StatusInternalServerError, err.Error())
 		return
 	}
+	apiKeyId := c.GetInt("api_key_id")
+	apiKey, err := op.APIKeyGet(apiKeyId, c.Request.Context())
+	if err != nil {
+		resp.Error(c, http.StatusInternalServerError, err.Error())
+		return
+	}
+	if apiKey.SupportedModels != "" {
+		supportedModels := lo.Map(strings.Split(apiKey.SupportedModels, ","), func(s string, _ int) string {
+			return strings.TrimSpace(s)
+		})
+		models = lo.Filter(models, func(m string, _ int) bool {
+			return lo.Contains(supportedModels, m)
+		})
+	}
 
 	if c.GetString("request_type") == "anthropic" {
 		var anthropicModels []model.AnthropicModel
@@ -73,12 +89,15 @@ func getModelList(c *gin.Context) {
 				Type:        "model",
 			})
 		}
-		c.JSON(200, gin.H{
+		response := gin.H{
 			"data":     anthropicModels,
-			"first_id": anthropicModels[0].ID,
 			"has_more": false,
-			"last_id":  anthropicModels[len(anthropicModels)-1].ID,
-		})
+		}
+		if len(anthropicModels) > 0 {
+			response["first_id"] = anthropicModels[0].ID
+			response["last_id"] = anthropicModels[len(anthropicModels)-1].ID
+		}
+		c.JSON(200, response)
 	} else {
 		var openAIModels []model.OpenAIModel
 		for _, m := range models {

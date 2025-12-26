@@ -9,7 +9,7 @@ import { SettingAccount } from './Account';
 import { SettingInfo } from './Info';
 import { SettingLLMSync } from './LLMSync';
 import { SettingLog } from './Log';
-import { SettingSensitive } from './Sensitive';
+import { SettingBackup } from './Backup';
 
 export function Setting() {
     return (
@@ -30,9 +30,6 @@ export function Setting() {
                 <SettingLog key="setting-log" />
             </div>
             <div>
-                <SettingSensitive key="setting-sensitive" />
-            </div>
-            <div>
                 <SettingAPIKey key="setting-apikey" />
             </div>
             <div>
@@ -40,6 +37,9 @@ export function Setting() {
             </div>
             <div>
                 <SettingLLMSync key="setting-llmsync" />
+            </div>
+            <div>
+                <SettingBackup key="setting-backup" />
             </div>
         </PageWrapper>
     );
