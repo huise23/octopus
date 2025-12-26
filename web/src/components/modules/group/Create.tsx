@@ -208,6 +208,7 @@ export function CreateDialogContent({ editGroup }: { editGroup?: Group }) {
                         name: item.model_name,
                         channel_id: item.channel_id,
                         channel_name: channelNameByKey.get(modelChannelKey(item.channel_id, item.model_name)) ?? `Channel ${item.channel_id}`,
+                        item_id: item.id,  // 添加item_id，标识这是已存在的成员
                         weight: item.weight,
                     }));
                 setSelectedMembers(members);

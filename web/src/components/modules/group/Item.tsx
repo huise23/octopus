@@ -131,28 +131,20 @@ export function GroupCard({ group }: { group: Group }) {
     };
 
     return (
-        <article className="flex flex-col rounded-3xl border border-border bg-card text-card-foreground p-4 custom-shadow">
-            <header className="flex items-start justify-between mb-3 relative overflow-visible rounded-xl -mx-1 px-1 -my-1 py-1">
-                <div className="flex-1 mr-2 min-w-0">
-                    <MorphingDialog>
-                        <MorphingDialogTrigger>
-                            <button
-                                type="button"
-                                className={cn(
-                                    "text-lg font-bold truncate text-left w-full rounded-lg p-2 -m-2",
-                                    "transition-colors duration-200 hover:bg-muted/50"
-                                )}
-                            >
-                                {group.name}
-                            </button>
-                        </MorphingDialogTrigger>
-                        <MorphingDialogContainer>
-                            <MorphingDialogContent className="w-full max-w-xl bg-card text-card-foreground px-6 py-4 rounded-3xl custom-shadow max-h-[90vh] overflow-y-auto">
-                                <CreateDialogContent editGroup={group} />
-                            </MorphingDialogContent>
-                        </MorphingDialogContainer>
-                    </MorphingDialog>
-                </div>
+        <article className="flex flex-col rounded-3xl border border-border bg-card text-card-foreground p-4 custom-shadow transition-all duration-300 hover:scale-[1.02]">
+            <header className="flex items-start justify-between mb-3">
+                <MorphingDialog>
+                    <MorphingDialogTrigger className="flex-1 mr-2 min-w-0">
+                        <h3 className="text-lg font-bold truncate text-left cursor-pointer hover:text-primary transition-colors duration-200">
+                            {group.name}
+                        </h3>
+                    </MorphingDialogTrigger>
+                    <MorphingDialogContainer>
+                        <MorphingDialogContent className="w-full max-w-xl bg-card text-card-foreground px-6 py-4 rounded-3xl custom-shadow max-h-[90vh] overflow-y-auto">
+                            <CreateDialogContent editGroup={group} />
+                        </MorphingDialogContent>
+                    </MorphingDialogContainer>
+                </MorphingDialog>
 
                 <div className="flex items-center gap-1 shrink-0">
                     <Tooltip side="top" sideOffset={10} align="center">

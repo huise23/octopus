@@ -7,6 +7,7 @@ import (
 	"net/http"
 	"net/url"
 	"sync"
+	"time"
 
 	"github.com/bestruirui/octopus/internal/model"
 	"github.com/bestruirui/octopus/internal/op"
@@ -75,9 +76,25 @@ func NewHTTPClient(useProxy bool) (*http.Client, error) {
 	}
 	cloned := transport.Clone()
 
+	// 配置传输层超时
+	cloned.ResponseHeaderTimeout = 30 * time.Second // 等待响应头的超时时间
+	cloned.ExpectContinueTimeout = 1 * time.Second  // 100 Continue超时
+
+	// 配置连接超时
+	cloned.DialContext = (&net.Dialer{
+		Timeout:   10 * time.Second, // 连接超时
+		KeepAlive: 30 * time.Second, // 保持连接时间
+	}).DialContext
+
+	// 配置TLS握手超时
+	cloned.TLSHandshakeTimeout = 10 * time.Second
+
 	if !useProxy {
 		cloned.Proxy = nil
-		return &http.Client{Transport: cloned}, nil
+		return &http.Client{
+			Transport: cloned,
+			Timeout:   0, // 流式响应不设置全局超时，使用context控制
+		}, nil
 	}
 
 	proxyURLStr, err := op.SettingGetString(model.SettingKeyProxyURL)
@@ -102,12 +119,26 @@ func NewHTTPClient(useProxy bool) (*http.Client, error) {
 			return nil, fmt.Errorf("invalid socks proxy: %w", err)
 		}
 		cloned.Proxy = nil
+		// SOCKS代理需要自定义DialContext
+		baseDialer := &net.Dialer{
+			Timeout:   10 * time.Second,
+			KeepAlive: 30 * time.Second,
+		}
 		cloned.DialContext = func(ctx context.Context, network, addr string) (net.Conn, error) {
+			// 先通过baseDialer连接到代理服务器
+			conn, err := baseDialer.DialContext(ctx, network, addr)
+			if err != nil {
+				return nil, err
+			}
+			// 然后通过SOCKS代理
 			return socksDialer.Dial(network, addr)
 		}
 	default:
 		return nil, fmt.Errorf("unsupported proxy scheme: %s", proxyURL.Scheme)
 	}
 
-	return &http.Client{Transport: cloned}, nil
+	return &http.Client{
+		Transport: cloned,
+		Timeout:   0, // 流式响应不设置全局超时，使用context控制
+	}, nil
 }

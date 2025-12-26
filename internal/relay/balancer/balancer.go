@@ -44,6 +44,21 @@ func (b *RoundRobin) Select(items []model.GroupItem) *model.GroupItem {
 }
 
 func (b *RoundRobin) Next(items []model.GroupItem, current *model.GroupItem) *model.GroupItem {
+	if len(items) <= 1 {
+		return nil
+	}
+	// 找到当前实例的位置，返回下一个实例
+	for i := range items {
+		if items[i].ID == current.ID {
+			nextIdx := atomic.AddUint64(&roundRobinCounter, 1) % uint64(len(items))
+			// 如果随机到的还是当前实例，则选择下一个
+			if nextIdx == uint64(i) {
+				nextIdx = uint64((i + 1) % len(items))
+			}
+			return &items[nextIdx]
+		}
+	}
+	// 如果没找到当前实例，使用默认选择
 	return b.Select(items)
 }
 
@@ -58,7 +73,21 @@ func (b *Random) Select(items []model.GroupItem) *model.GroupItem {
 }
 
 func (b *Random) Next(items []model.GroupItem, current *model.GroupItem) *model.GroupItem {
-	return b.Select(items)
+	if len(items) <= 1 {
+		return nil
+	}
+	// 创建排除当前实例的候选列表
+	candidates := make([]model.GroupItem, 0, len(items)-1)
+	for i := range items {
+		if items[i].ID != current.ID {
+			candidates = append(candidates, items[i])
+		}
+	}
+	if len(candidates) == 0 {
+		return nil
+	}
+	// 从候选列表中随机选择
+	return &candidates[rand.Intn(len(candidates))]
 }
 
 // Failover balancer - tries by priority, falls back on failure
@@ -110,7 +139,34 @@ func (b *Weighted) Select(items []model.GroupItem) *model.GroupItem {
 }
 
 func (b *Weighted) Next(items []model.GroupItem, current *model.GroupItem) *model.GroupItem {
-	return b.Select(items)
+	if len(items) <= 1 {
+		return nil
+	}
+	// 计算排除当前实例后的总权重
+	totalWeight := 0
+	candidates := make([]model.GroupItem, 0, len(items)-1)
+	for i := range items {
+		if items[i].ID != current.ID {
+			candidates = append(candidates, items[i])
+			totalWeight += items[i].Weight
+		}
+	}
+	if len(candidates) == 0 {
+		return nil
+	}
+	// 如果所有候选权重都为0，返回第一个候选
+	if totalWeight == 0 {
+		return &candidates[0]
+	}
+	// 根据权重选择
+	r := rand.Intn(totalWeight)
+	for i := range candidates {
+		r -= candidates[i].Weight
+		if r < 0 {
+			return &candidates[i]
+		}
+	}
+	return &candidates[0]
 }
 
 func sortByPriority(items []model.GroupItem) []model.GroupItem {
