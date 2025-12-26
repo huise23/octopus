@@ -4,12 +4,7 @@
     <option name="autoReloadType" value="SELECTIVE" />
   </component>
   <component name="ChangeListManager">
-    <list default="true" id="b2588384-be91-4f68-9273-3eb2ab10c13a" name="更改" comment="1.渠道模型下拉列表修改">
-      <change beforePath="$PROJECT_DIR$/internal/client/http.go" beforeDir="false" afterPath="$PROJECT_DIR$/internal/client/http.go" afterDir="false" />
-      <change beforePath="$PROJECT_DIR$/internal/relay/balancer/balancer.go" beforeDir="false" afterPath="$PROJECT_DIR$/internal/relay/balancer/balancer.go" afterDir="false" />
-      <change beforePath="$PROJECT_DIR$/web/src/components/modules/group/Create.tsx" beforeDir="false" afterPath="$PROJECT_DIR$/web/src/components/modules/group/Create.tsx" afterDir="false" />
-      <change beforePath="$PROJECT_DIR$/web/src/components/modules/group/Item.tsx" beforeDir="false" afterPath="$PROJECT_DIR$/web/src/components/modules/group/Item.tsx" afterDir="false" />
-    </list>
+    <list default="true" id="b2588384-be91-4f68-9273-3eb2ab10c13a" name="更改" comment="1.渠道模型下拉列表修改" />
     <option name="SHOW_DIALOG" value="false" />
     <option name="HIGHLIGHT_CONFLICTS" value="true" />
     <option name="HIGHLIGHT_NON_ACTIVE_CHANGELIST" value="false" />

@@ -35,7 +35,7 @@ func AutoAddGroupItem(id int, ctx context.Context) error {
 
 			// 使用新的匹配引擎（优先使用关键字匹配）
 			if group.MatchMode != model.GroupMatchModeNameOnly {
-				matched = keywordMatcher.MatchModel(modelName, group)
+				matched = keywordMatcher.MatchModel(modelName, *group)
 				if matched {
 					log.Infof("AutoAddGroupItem: model [%s] matched group [%s] via keyword matching (mode: %d)", modelName, group.Name, group.MatchMode)
 				}
