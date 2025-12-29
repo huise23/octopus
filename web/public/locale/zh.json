@@ -116,6 +116,24 @@
             "example": "只允许指定域名: https://example.com,https://example2.com"
         },
         "saved": "已保存",
+        "sensitive": {
+            "title": "敏感信息过滤",
+            "globalEnabled": "全局开关",
+            "rules": "过滤规则",
+            "addRule": "添加规则",
+            "editRule": "编辑规则",
+            "ruleName": "规则名称",
+            "pattern": "正则表达式",
+            "replacement": "替换文本",
+            "priority": "优先级",
+            "ruleDescription": "使用正则表达式定义需要过滤的敏感信息模式",
+            "cancel": "取消",
+            "save": "保存",
+            "created": "规则已创建",
+            "deleted": "规则已删除",
+            "requiredFields": "请填写必填字段",
+            "invalidPattern": "无效的正则表达式"
+        },
         "backup": {
             "title": "备份 / 恢复",
             "export": {

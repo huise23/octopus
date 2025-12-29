@@ -16,6 +16,7 @@ const (
 	SettingKeyRelayLogKeepPeriod      SettingKey = "relay_log_keep_period"      // 日志保存时间范围(天)
 	SettingKeyRelayLogKeepEnabled     SettingKey = "relay_log_keep_enabled"     // 是否保留历史日志
 	SettingKeyCORSAllowOrigins        SettingKey = "cors_allow_origins"         // 跨域白名单(逗号分隔, 如 "example.com,example2.com"). 为空不允许跨域, "*"允许所有
+	SettingKeySensitiveFilterEnabled  SettingKey = "sensitive_filter_enabled"   // 敏感信息过滤全局开关
 )
 
 type Setting struct {

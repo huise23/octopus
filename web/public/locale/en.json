@@ -116,6 +116,24 @@
             "example": "Only allow specific domains: https://example.com,https://example2.com"
         },
         "saved": "Saved",
+        "sensitive": {
+            "title": "Sensitive Data Filter",
+            "globalEnabled": "Global Switch",
+            "rules": "Filter Rules",
+            "addRule": "Add Rule",
+            "editRule": "Edit Rule",
+            "ruleName": "Rule Name",
+            "pattern": "Regex Pattern",
+            "replacement": "Replacement Text",
+            "priority": "Priority",
+            "ruleDescription": "Define sensitive information patterns to filter using regular expressions",
+            "cancel": "Cancel",
+            "save": "Save",
+            "created": "Rule created",
+            "deleted": "Rule deleted",
+            "requiredFields": "Please fill in required fields",
+            "invalidPattern": "Invalid regular expression"
+        },
         "backup": {
             "title": "Backup / Restore",
             "export": {

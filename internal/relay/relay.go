@@ -68,6 +68,14 @@ func Handler(inboundType inbound.InboundType, c *gin.Context) {
 	// 初始化统计和日志
 	apiKeyID := c.GetInt("api_key_id")
 	metrics := NewRelayMetrics(internalRequest.Model)
+	// 过滤敏感信息
+	for i := range internalRequest.Messages {
+		filtered, count := op.SensitiveFilterText(internalRequest.Messages[i].Content)
+		if count > 0 {
+			internalRequest.Messages[i].Content = filtered
+		}
+	}
+
 	metrics.SetInternalRequest(internalRequest)
 	metrics.SetAPIKeyID(apiKeyID)
 	// 获取通道分组
