@@ -33,6 +33,7 @@ func DefaultSettings() []Setting {
 		{Key: SettingKeySyncLLMInterval, Value: "24"},         // 默认24小时同步一次LLM
 		{Key: SettingKeyRelayLogKeepPeriod, Value: "7"},       // 默认日志保存7天
 		{Key: SettingKeyRelayLogKeepEnabled, Value: "true"},   // 默认保留历史日志
+		{Key: SettingKeySensitiveFilterEnabled, Value: "true"}, // 默认启用敏感信息过滤
 	}
 }
 
@@ -44,9 +45,9 @@ func (s *Setting) Validate() error {
 			return fmt.Errorf("model info update interval must be an integer")
 		}
 		return nil
-	case SettingKeyRelayLogKeepEnabled:
+	case SettingKeyRelayLogKeepEnabled, SettingKeySensitiveFilterEnabled:
 		if s.Value != "true" && s.Value != "false" {
-			return fmt.Errorf("relay log keep enabled must be true or false")
+			return fmt.Errorf("setting value must be true or false")
 		}
 		return nil
 	case SettingKeyProxyURL:

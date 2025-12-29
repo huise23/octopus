@@ -70,9 +70,22 @@ func Handler(inboundType inbound.InboundType, c *gin.Context) {
 	metrics := NewRelayMetrics(internalRequest.Model)
 	// 过滤敏感信息
 	for i := range internalRequest.Messages {
-		filtered, count := op.SensitiveFilterText(internalRequest.Messages[i].Content)
-		if count > 0 {
-			internalRequest.Messages[i].Content = filtered
+		msg := &internalRequest.Messages[i]
+		// 处理简单文本内容
+		if msg.Content.Content != nil {
+			filtered, count := op.SensitiveFilterText(*msg.Content.Content)
+			if count > 0 {
+				msg.Content.Content = &filtered
+			}
+		}
+		// 处理多模态内容中的文本部分
+		for j := range msg.Content.MultipleContent {
+			if msg.Content.MultipleContent[j].Type == "text" && msg.Content.MultipleContent[j].Text != nil {
+				filtered, count := op.SensitiveFilterText(*msg.Content.MultipleContent[j].Text)
+				if count > 0 {
+					msg.Content.MultipleContent[j].Text = &filtered
+				}
+			}
 		}
 	}
 

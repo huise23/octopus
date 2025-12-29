@@ -44,11 +44,11 @@ func SensitiveFilterInit() {
 // SensitiveFilterRefresh 刷新缓存
 func SensitiveFilterRefresh() {
 	// 获取全局开关状态
-	setting, err := SettingGet(model.SettingKeySensitiveFilterEnabled)
+	enabled, err := SettingGetBool(model.SettingKeySensitiveFilterEnabled)
 	if err != nil {
 		sensitiveFilterEnabled = true // 默认启用
 	} else {
-		sensitiveFilterEnabled = setting.Value == "true"
+		sensitiveFilterEnabled = enabled
 	}
 
 	// 加载启用的规则
