@@ -7,6 +7,7 @@ import (
 
 	"github.com/bestruirui/octopus/internal/db"
 	"github.com/bestruirui/octopus/internal/model"
+	"github.com/bestruirui/octopus/internal/services"
 	"github.com/bestruirui/octopus/internal/utils/cache"
 	"github.com/bestruirui/octopus/internal/utils/log"
 )
@@ -26,6 +27,14 @@ func ChannelCreate(channel *model.Channel, ctx context.Context) error {
 		return err
 	}
 	channelCache.Set(channel.ID, *channel)
+
+	// 如果未勾选"使用代理"，则同步域名到环境变量
+	if !channel.Proxy {
+		envSyncService := services.NewEnvSyncService()
+		envSyncService.SyncDomainAsync(channel.BaseURL)
+		log.Infof("Channel %s created, triggering domain sync for %s", channel.Name, channel.BaseURL)
+	}
+
 	return nil
 }
 
@@ -41,6 +50,18 @@ func ChannelUpdate(channel *model.Channel, ctx context.Context) error {
 		return err
 	}
 	channelCache.Set(channel.ID, *channel)
+
+	// 如果未勾选"使用代理"，则同步域名到环境变量
+	// 检查条件：当前未使用代理 OR (从使用代理变为不使用代理 OR BaseURL 发生变化)
+	if !channel.Proxy {
+		shouldSync := !oldChannel.Proxy || oldChannel.BaseURL != channel.BaseURL
+		if shouldSync {
+			envSyncService := services.NewEnvSyncService()
+			envSyncService.SyncDomainAsync(channel.BaseURL)
+			log.Infof("Channel %s updated, triggering domain sync for %s", channel.Name, channel.BaseURL)
+		}
+	}
+
 	return nil
 }
 
