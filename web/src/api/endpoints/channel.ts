@@ -11,6 +11,7 @@ export enum ChannelType {
     OpenAIResponse = 1,
     Anthropic = 2,
     Gemini = 3,
+    Volcengine = 4,
 }
 
 /**
@@ -191,6 +192,32 @@ export function useDeleteChannel() {
         },
         onError: (error) => {
             logger.error('渠道删除失败:', error);
+        },
+    });
+}
+
+/**
+ * 启用/禁用渠道 Hook
+ * 
+ * @example
+ * const enableChannel = useEnableChannel();
+ * 
+ * enableChannel.mutate({ id: 1, enabled: true }); // 启用 ID 为 1 的渠道
+ * enableChannel.mutate({ id: 1, enabled: false }); // 禁用 ID 为 1 的渠道
+ */
+export function useEnableChannel() {
+    const queryClient = useQueryClient();
+
+    return useMutation({
+        mutationFn: async (data: { id: number; enabled: boolean }) => {
+            return apiClient.post<null>('/api/v1/channel/enable', data);
+        },
+        onSuccess: () => {
+            logger.log('渠道状态更新成功');
+            queryClient.invalidateQueries({ queryKey: ['channels', 'list'] });
+        },
+        onError: (error) => {
+            logger.error('渠道状态更新失败:', error);
         },
     });
 }

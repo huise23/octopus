@@ -52,6 +52,13 @@
         "log": "Log",
         "setting": "Setting"
     },
+    "common": {
+        "copy": {
+            "success": "Copied",
+            "failed": "Copy failed",
+            "noContent": "Nothing to copy"
+        }
+    },
     "home": {
         "activity": {
             "requestCount": "Requests",
@@ -85,6 +92,9 @@
             }
         },
         "rank": {
+            "title": "Ranking",
+            "sortByCost": "Cost",
+            "sortByCount": "Count",
             "noData": "No ranking data"
         }
     },
@@ -192,9 +202,7 @@
                 "updateSuccess": "API key updated",
                 "updateError": "Failed to update API key",
                 "deleteSuccess": "API key deleted",
-                "deleteError": "Failed to delete API key",
-                "copySuccess": "API key copied",
-                "copyError": "Failed to copy API key"
+                "deleteError": "Failed to delete API key"
             }
         },
         "llmPrice": {
@@ -393,12 +401,12 @@
     },
     "channel": {
         "card": {
-            "status": {
-                "enabled": "Enabled",
-                "disabled": "Disabled"
-            },
             "requestCount": "Requests",
-            "totalCost": "Total Cost"
+            "totalCost": "Total Cost",
+            "toast": {
+                "enabled": "Channel enabled",
+                "disabled": "Channel disabled"
+            }
         },
         "detail": {
             "title": {
@@ -466,6 +474,7 @@
             "typeOpenAIResponse": "OpenAI Response",
             "typeAnthropic": "Anthropic",
             "typeGemini": "Gemini",
+            "typeVolcengine": "Volcengine",
             "autoSync": "Auto Sync",
             "autoGroup": "Auto Group",
             "autoGroupNone": "None",

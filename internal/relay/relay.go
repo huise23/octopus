@@ -10,7 +10,6 @@ import (
 	"time"
 
 	"github.com/bestruirui/octopus/internal/client"
-	dbmodel "github.com/bestruirui/octopus/internal/model"
 	"github.com/bestruirui/octopus/internal/op"
 	"github.com/bestruirui/octopus/internal/relay/balancer"
 	"github.com/bestruirui/octopus/internal/server/resp"
@@ -21,33 +20,6 @@ import (
 	"github.com/gin-gonic/gin"
 	"github.com/tmaxmax/go-sse"
 )
-
-// hopByHopHeaders 定义不应转发的 HTTP 头
-var hopByHopHeaders = map[string]bool{
-	"authorization":       true,
-	"x-api-key":           true,
-	"connection":          true,
-	"keep-alive":          true,
-	"proxy-authenticate":  true,
-	"proxy-authorization": true,
-	"te":                  true,
-	"trailer":             true,
-	"transfer-encoding":   true,
-	"upgrade":             true,
-	"content-length":      true,
-	"host":                true,
-	"accept-encoding":     true,
-}
-
-// relayContext 保存请求转发过程中的上下文信息
-type relayContext struct {
-	c               *gin.Context
-	inAdapter       model.Inbound
-	outAdapter      model.Outbound
-	internalRequest *model.InternalLLMRequest
-	channel         *dbmodel.Channel
-	metrics         *RelayMetrics
-}
 
 // Handler 处理入站请求并转发到上游服务
 func Handler(inboundType inbound.InboundType, c *gin.Context) {
@@ -158,6 +130,12 @@ func Handler(inboundType inbound.InboundType, c *gin.Context) {
 				metrics.Save(c.Request.Context(), true, nil)
 				return
 			} else {
+				if c.Writer.Written() {
+					// Streaming responses may have already started; retrying would corrupt the client stream.
+					rc.collectResponse()
+					metrics.Save(c.Request.Context(), false, err)
+					return
+				}
 				lastErr = fmt.Errorf("channel %s failed: %v", channel.Name, err)
 			}
 			item = b.Next(group.Items, item)
@@ -183,6 +161,9 @@ func parseRequest(inboundType inbound.InboundType, c *gin.Context) (*model.Inter
 		resp.Error(c, http.StatusInternalServerError, err.Error())
 		return nil, nil, err
 	}
+
+	// Pass through the original query parameters
+	internalRequest.Query = c.Request.URL.Query()
 
 	if err := internalRequest.Validate(); err != nil {
 		resp.Error(c, http.StatusBadRequest, err.Error())
@@ -219,13 +200,16 @@ func (rc *relayContext) forward() error {
 	defer response.Body.Close()
 
 	// 检查响应状态
-	if response.StatusCode != http.StatusOK {
-		errMsg := rc.readUpstreamError(response)
-		return fmt.Errorf("upstream error %d: %s", response.StatusCode, errMsg)
+	if response.StatusCode < 200 || response.StatusCode >= 300 {
+		body, err := io.ReadAll(response.Body)
+		if err != nil {
+			return fmt.Errorf("failed to read response body: %w", err)
+		}
+		return fmt.Errorf("upstream error: %d: %s", response.StatusCode, string(body))
 	}
 
 	// 处理响应
-	if rc.isStreamRequest() {
+	if rc.internalRequest.Stream != nil && *rc.internalRequest.Stream {
 		return rc.handleStreamResponse(ctx, response)
 	}
 	return rc.handleResponse(ctx, response)
@@ -260,23 +244,6 @@ func (rc *relayContext) sendRequest(req *http.Request) (*http.Response, error) {
 	return response, nil
 }
 
-// readUpstreamError 读取上游错误信息
-func (rc *relayContext) readUpstreamError(response *http.Response) string {
-	body, err := io.ReadAll(response.Body)
-	if err != nil {
-		log.Warnf("failed to read response body: %v", err)
-		return "failed to read error body"
-	}
-	errMsg := string(body)
-	log.Warnf("upstream server error: %d - %s", response.StatusCode, errMsg)
-	return errMsg
-}
-
-// isStreamRequest 判断是否为流式请求
-func (rc *relayContext) isStreamRequest() bool {
-	return rc.internalRequest.Stream != nil && *rc.internalRequest.Stream
-}
-
 // handleStreamResponse 处理流式响应
 func (rc *relayContext) handleStreamResponse(ctx context.Context, response *http.Response) error {
 	// 设置 SSE 响应头
@@ -286,7 +253,8 @@ func (rc *relayContext) handleStreamResponse(ctx context.Context, response *http
 	rc.c.Header("X-Accel-Buffering", "no")
 
 	firstToken := true
-	for ev, err := range sse.Read(response.Body, nil) {
+	readCfg := &sse.ReadConfig{MaxEventSize: maxSSEEventSize}
+	for ev, err := range sse.Read(response.Body, readCfg) {
 		// 检查客户端是否断开
 		select {
 		case <-ctx.Done():
@@ -297,7 +265,7 @@ func (rc *relayContext) handleStreamResponse(ctx context.Context, response *http
 
 		if err != nil {
 			log.Warnf("failed to read event: %v", err)
-			break
+			return fmt.Errorf("failed to read stream event: %w", err)
 		}
 
 		// 转换流式数据

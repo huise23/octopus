@@ -5,7 +5,6 @@ import { LocaleProvider } from "@/provider/locale";
 import QueryProvider from "@/provider/query";
 import { ServiceWorkerRegister } from "@/components/sw-register";
 import { TooltipProvider } from "@/components/animate-ui/components/animate/tooltip";
-import { miSans } from "@/lib/fonts";
 
 
 
@@ -15,7 +14,7 @@ export default function RootLayout({
   children: React.ReactNode;
 }>) {
   return (
-    <html suppressHydrationWarning className={miSans.variable}>
+    <html suppressHydrationWarning>
       <head>
         <meta name="theme-color" content="#eae9e3" />
         <meta name="application-name" content="Octopus" />
@@ -25,7 +24,9 @@ export default function RootLayout({
         <meta name="mobile-web-app-capable" content="yes" />
         <meta name="mobile-web-app-status-bar-style" content="black" />
         <meta name="mobile-web-app-title" content="Octopus" />
-        <link rel="manifest" href="/manifest.json" />
+        <link rel="manifest" href="./manifest.json" />
+        <link rel="icon" href="./favicon.ico" sizes="any" />
+        <link rel="apple-touch-icon" href="./apple-icon.png" />
         <title>Octopus</title>
         <style
           dangerouslySetInnerHTML={{
