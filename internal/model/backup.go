@@ -16,6 +16,7 @@ type DBDump struct {
 	LLMInfos   []LLMInfo   `json:"llm_infos,omitempty"`
 	APIKeys    []APIKey    `json:"api_keys,omitempty"`
 	Settings   []Setting   `json:"settings,omitempty"`
+	SensitiveFilterRules []SensitiveFilterRule `json:"sensitive_filter_rules,omitempty"`
 
 	StatsTotal   []StatsTotal   `json:"stats_total,omitempty"`
 	StatsDaily   []StatsDaily   `json:"stats_daily,omitempty"`

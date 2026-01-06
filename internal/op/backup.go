@@ -41,6 +41,9 @@ func DBExportAll(ctx context.Context, includeLogs, includeStats bool) (*model.DB
 	if err := conn.Find(&d.Settings).Error; err != nil {
 		return nil, fmt.Errorf("export settings: %w", err)
 	}
+	if err := conn.Find(&d.SensitiveFilterRules).Error; err != nil {
+		return nil, fmt.Errorf("export sensitive_filter_rules: %w", err)
+	}
 
 	if includeStats {
 		if err := conn.Find(&d.StatsTotal).Error; err != nil {
@@ -115,6 +118,31 @@ func DBImportIncremental(ctx context.Context, dump *model.DBDump) (*model.DBImpo
 			return fmt.Errorf("import settings: %w", err)
 		} else {
 			res.RowsAffected["settings"] = n
+		}
+
+		// 分离内置规则和自定义规则
+		var builtInRules []model.SensitiveFilterRule
+		var customRules []model.SensitiveFilterRule
+		for _, rule := range dump.SensitiveFilterRules {
+			if rule.BuiltIn {
+				builtInRules = append(builtInRules, rule)
+			} else {
+				customRules = append(customRules, rule)
+			}
+		}
+
+		// 导入自定义规则（仅新增，不覆盖）
+		if n, err := createDoNothing(tx, customRules); err != nil {
+			return fmt.Errorf("import custom sensitive_filter_rules: %w", err)
+		} else {
+			res.RowsAffected["sensitive_filter_rules_custom"] = n
+		}
+
+		// 导入内置规则（仅更新 enabled 和 priority）
+		if n, err := createUpsertBuiltInRules(tx, builtInRules); err != nil {
+			return fmt.Errorf("import builtin sensitive_filter_rules: %w", err)
+		} else {
+			res.RowsAffected["sensitive_filter_rules_builtin"] = n
 		}
 
 		if dump.IncludeStats {
@@ -192,6 +220,18 @@ func createUpsertSettings(tx *gorm.DB, rows []model.Setting) (int64, error) {
 	result := tx.Clauses(clause.OnConflict{
 		Columns:   []clause.Column{{Name: "key"}},
 		DoUpdates: clause.AssignmentColumns([]string{"value"}),
+	}).Create(&rows)
+	return result.RowsAffected, result.Error
+}
+
+func createUpsertBuiltInRules(tx *gorm.DB, rows []model.SensitiveFilterRule) (int64, error) {
+	if len(rows) == 0 {
+		return 0, nil
+	}
+	// 内置规则仅更新 enabled 和 priority 字段，不更新核心字段
+	result := tx.Clauses(clause.OnConflict{
+		Columns:   []clause.Column{{Name: "id"}},
+		DoUpdates: clause.AssignmentColumns([]string{"enabled", "priority"}),
 	}).Create(&rows)
 	return result.RowsAffected, result.Error
 }
