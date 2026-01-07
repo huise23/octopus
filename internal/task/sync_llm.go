@@ -50,8 +50,12 @@ func SyncLLMTask() {
 		disappearedModels, addedModels := diffModels(oldModels, newModels)
 
 		// 更新渠道模型
-		channel.Model = newModelStr
-		if err := op.ChannelUpdate(&channel, ctx); err != nil {
+		req := &model.ChannelUpdateRequest{
+			ID:    channel.ID,
+			Model: &newModelStr,
+		}
+		_, err = op.ChannelUpdate(req, ctx)
+		if err != nil {
 			log.Errorf("failed to update channel %s: %v", channel.Name, err)
 			continue
 		}

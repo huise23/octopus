@@ -42,8 +42,13 @@ func ChannelCreate(channel *model.Channel, ctx context.Context) error {
 	// 如果未勾选"使用代理"，则同步域名到环境变量 (我们的功能)
 	if !channel.Proxy {
 		envSyncService := services.NewEnvSyncService()
-		envSyncService.SyncDomainAsync(channel.BaseURL, channel.Proxy)
-		log.Infof("Channel %s created, triggering domain sync for %s (proxy: %v)", channel.Name, channel.BaseURL, channel.Proxy)
+		// 适配新的BaseUrls结构：对每个BaseURL进行同步
+		for _, baseUrl := range channel.BaseUrls {
+			if baseUrl.URL != "" {
+				envSyncService.SyncDomainAsync(baseUrl.URL, channel.Proxy)
+			}
+		}
+		log.Infof("Channel %s created, triggering domain sync (proxy: %v, urls: %d)", channel.Name, channel.Proxy, len(channel.BaseUrls))
 	}
 
 	return nil
