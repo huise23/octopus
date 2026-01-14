@@ -15,8 +15,8 @@ importers:
         specifier: ^18.0.1
         version: 18.0.1(@types/react@19.2.8)(react-dom@19.2.3(react@19.2.3))(react@19.2.3)
       '@lobehub/icons':
-        specifier: ^4.0.3
-        version: 4.0.3(@lobehub/ui@2.24.1(@babel/core@7.28.6)(@types/mdast@4.0.4)(@types/react-dom@19.2.3(@types/react@19.2.8))(@types/react@19.2.8)(antd@5.29.1(date-fns@4.1.0)(react-dom@19.2.3(react@19.2.3))(react@19.2.3))(framer-motion@12.26.1(react-dom@19.2.3(react@19.2.3))(react@19.2.3))(micromark-util-types@2.0.2)(micromark@4.0.2)(react-dom@19.2.3(react@19.2.3))(react@19.2.3))(@types/react@19.2.8)(antd@5.29.1(date-fns@4.1.0)(react-dom@19.2.3(react@19.2.3))(react@19.2.3))(react-dom@19.2.3(react@19.2.3))(react@19.2.3)
+        specifier: ^2.48.0
+        version: 2.48.0(@babel/core@7.28.6)(@types/mdast@4.0.4)(@types/react-dom@19.2.3(@types/react@19.2.8))(@types/react@19.2.8)(antd@5.29.1(date-fns@4.1.0)(react-dom@19.2.3(react@19.2.3))(react@19.2.3))(framer-motion@12.26.1(react-dom@19.2.3(react@19.2.3))(react@19.2.3))(micromark-util-types@2.0.2)(micromark@4.0.2)(react-dom@19.2.3(react@19.2.3))(react@19.2.3)
       '@radix-ui/react-accordion':
         specifier: ^1.2.12
         version: 1.2.12(@types/react-dom@19.2.3(@types/react@19.2.8))(@types/react@19.2.8)(react-dom@19.2.3(react@19.2.3))(react@19.2.3)
@@ -153,12 +153,6 @@ packages:
 
   '@ant-design/cssinjs@1.24.0':
     resolution: {integrity: sha512-K4cYrJBsgvL+IoozUXYjbT6LHHNt+19a9zkvpBPxLjFHas1UpPM2A5MlhROb0BT8N8WoavM5VsP9MeSeNK/3mg==}
-    peerDependencies:
-      react: '>=16.0.0'
-      react-dom: '>=16.0.0'
-
-  '@ant-design/cssinjs@2.0.2':
-    resolution: {integrity: sha512-7KDVIigtqlamOLtJ0hbjECX/sDGDaJXsM/KHala8I/1E4lpl9RAO585kbVvh/k1rIrFAV6JeGkXmdWyYj9XvuA==}
     peerDependencies:
       react: '>=16.0.0'
       react-dom: '>=16.0.0'
@@ -688,14 +682,6 @@ packages:
     resolution: {integrity: sha512-BeLa3pG0Bj1jUozN7k10oWqyfkCA5p5eBzMyfd1Y/WzUSyDwDOrPWtcIpLSS+Y8/4BLMiMJtWR/dQ/UXrA1+DA==}
     peerDependencies:
       antd: ^5.23.0
-      react: ^19.0.0
-      react-dom: ^19.0.0
-
-  '@lobehub/icons@4.0.3':
-    resolution: {integrity: sha512-gEQI4Y2WmceBjE3l+3VEquZJb56NeCQEiBWtNXOcth28tVF0kL5FEtkXdtzpKuf21DQkFnzB1lb5oOgtEaBGMg==}
-    peerDependencies:
-      '@lobehub/ui': ^4.3.3
-      antd: ^6.1.1
       react: ^19.0.0
       react-dom: ^19.0.0
 
@@ -1381,12 +1367,6 @@ packages:
       react: '>=16.9.0'
       react-dom: '>=16.9.0'
 
-  '@rc-component/util@1.7.0':
-    resolution: {integrity: sha512-tIvIGj4Vl6fsZFvWSkYw9sAfiCKUXMyhVz6kpKyZbwyZyRPqv2vxYZROdaO1VB4gqTNvUZFXh6i3APUiterw5g==}
-    peerDependencies:
-      react: '>=18.0.0'
-      react-dom: '>=18.0.0'
-
   '@reduxjs/toolkit@2.11.2':
     resolution: {integrity: sha512-Kd6kAHTA6/nUpp8mySPqj3en3dm0tdMIgbttnQ1xFMVpufoj+ADi8pXLBsd4xzTRHQa7t/Jv8W5UnCuW4kuWMQ==}
     peerDependencies:
@@ -1996,12 +1976,6 @@ packages:
     resolution: {integrity: sha512-CQOfddVp4aOvBfCepa+Kj2e7ap+2XBINg1Kn2osdE3oQvrD7KJu/K0sfnLcFLkgCJygbxmuazYdWLKb+drPDYA==}
     peerDependencies:
       antd: '>=5.8.1'
-      react: '>=18'
-
-  antd-style@4.1.0:
-    resolution: {integrity: sha512-vnPBGg0OVlSz90KRYZhxd89aZiOImTiesF+9MQqN8jsLGZUQTjbP04X9jTdEfsztKUuMbBWg/RmB/wHTakbtMQ==}
-    peerDependencies:
-      antd: '>=6.0.0'
       react: '>=18'
 
   antd@5.29.1:
@@ -3101,9 +3075,6 @@ packages:
   is-map@2.0.3:
     resolution: {integrity: sha512-1Qed0/Hr2m+YqxnM09CjA2d/i6YZNfF6R2oRAOj36eUdS6qIV/huPJNSEpKbupewFs+ZsJlxsjjPbc0/afW6Lw==}
     engines: {node: '>= 0.4'}
-
-  is-mobile@5.0.0:
-    resolution: {integrity: sha512-Tz/yndySvLAEXh+Uk8liFCxOwVH6YutuR74utvOcu7I9Di+DwM0mtdPVZNaVvvBUM2OXxne/NhOs1zAO7riusQ==}
 
   is-negative-zero@2.0.3:
     resolution: {integrity: sha512-5KoIu2Ngpyek75jXodFvnafB6DJgr3u8uuK0LEZJjrU19DrMD3EVERaR8sjz8CCGgpZvxPl9SuE1GMVPFHx1mw==}
@@ -4938,18 +4909,6 @@ snapshots:
       react-dom: 19.2.3(react@19.2.3)
       stylis: 4.3.6
 
-  '@ant-design/cssinjs@2.0.2(react-dom@19.2.3(react@19.2.3))(react@19.2.3)':
-    dependencies:
-      '@babel/runtime': 7.28.6
-      '@emotion/hash': 0.8.0
-      '@emotion/unitless': 0.7.5
-      '@rc-component/util': 1.7.0(react-dom@19.2.3(react@19.2.3))(react@19.2.3)
-      clsx: 2.1.1
-      csstype: 3.2.3
-      react: 19.2.3
-      react-dom: 19.2.3(react@19.2.3)
-      stylis: 4.3.6
-
   '@ant-design/fast-color@2.0.6':
     dependencies:
       '@babel/runtime': 7.28.6
@@ -5569,19 +5528,6 @@ snapshots:
       - solid-js
       - supports-color
       - vue
-
-  '@lobehub/icons@4.0.3(@lobehub/ui@2.24.1(@babel/core@7.28.6)(@types/mdast@4.0.4)(@types/react-dom@19.2.3(@types/react@19.2.8))(@types/react@19.2.8)(antd@5.29.1(date-fns@4.1.0)(react-dom@19.2.3(react@19.2.3))(react@19.2.3))(framer-motion@12.26.1(react-dom@19.2.3(react@19.2.3))(react@19.2.3))(micromark-util-types@2.0.2)(micromark@4.0.2)(react-dom@19.2.3(react@19.2.3))(react@19.2.3))(@types/react@19.2.8)(antd@5.29.1(date-fns@4.1.0)(react-dom@19.2.3(react@19.2.3))(react@19.2.3))(react-dom@19.2.3(react@19.2.3))(react@19.2.3)':
-    dependencies:
-      '@lobehub/ui': 2.24.1(@babel/core@7.28.6)(@types/mdast@4.0.4)(@types/react-dom@19.2.3(@types/react@19.2.8))(@types/react@19.2.8)(antd@5.29.1(date-fns@4.1.0)(react-dom@19.2.3(react@19.2.3))(react@19.2.3))(framer-motion@12.26.1(react-dom@19.2.3(react@19.2.3))(react@19.2.3))(micromark-util-types@2.0.2)(micromark@4.0.2)(react-dom@19.2.3(react@19.2.3))(react@19.2.3)
-      antd: 5.29.1(date-fns@4.1.0)(react-dom@19.2.3(react@19.2.3))(react@19.2.3)
-      antd-style: 4.1.0(@types/react@19.2.8)(antd@5.29.1(date-fns@4.1.0)(react-dom@19.2.3(react@19.2.3))(react@19.2.3))(react-dom@19.2.3(react@19.2.3))(react@19.2.3)
-      lucide-react: 0.469.0(react@19.2.3)
-      polished: 4.3.1
-      react: 19.2.3
-      react-dom: 19.2.3(react@19.2.3)
-    transitivePeerDependencies:
-      - '@types/react'
-      - supports-color
 
   '@lobehub/ui@2.24.1(@babel/core@7.28.6)(@types/mdast@4.0.4)(@types/react-dom@19.2.3(@types/react@19.2.8))(@types/react@19.2.8)(antd@5.29.1(date-fns@4.1.0)(react-dom@19.2.3(react@19.2.3))(react@19.2.3))(framer-motion@12.26.1(react-dom@19.2.3(react@19.2.3))(react@19.2.3))(micromark-util-types@2.0.2)(micromark@4.0.2)(react-dom@19.2.3(react@19.2.3))(react@19.2.3)':
     dependencies:
@@ -6301,13 +6247,6 @@ snapshots:
       react: 19.2.3
       react-dom: 19.2.3(react@19.2.3)
 
-  '@rc-component/util@1.7.0(react-dom@19.2.3(react@19.2.3))(react@19.2.3)':
-    dependencies:
-      is-mobile: 5.0.0
-      react: 19.2.3
-      react-dom: 19.2.3(react@19.2.3)
-      react-is: 18.3.1
-
   '@reduxjs/toolkit@2.11.2(react-redux@9.2.0(@types/react@19.2.8)(react@19.2.3)(redux@5.0.1))(react@19.2.3)':
     dependencies:
       '@standard-schema/spec': 1.1.0
@@ -6888,23 +6827,6 @@ snapshots:
   antd-style@3.7.1(@types/react@19.2.8)(antd@5.29.1(date-fns@4.1.0)(react-dom@19.2.3(react@19.2.3))(react@19.2.3))(react-dom@19.2.3(react@19.2.3))(react@19.2.3):
     dependencies:
       '@ant-design/cssinjs': 1.24.0(react-dom@19.2.3(react@19.2.3))(react@19.2.3)
-      '@babel/runtime': 7.28.6
-      '@emotion/cache': 11.14.0
-      '@emotion/css': 11.13.5
-      '@emotion/react': 11.14.0(@types/react@19.2.8)(react@19.2.3)
-      '@emotion/serialize': 1.3.3
-      '@emotion/utils': 1.4.2
-      antd: 5.29.1(date-fns@4.1.0)(react-dom@19.2.3(react@19.2.3))(react@19.2.3)
-      react: 19.2.3
-      use-merge-value: 1.2.0(react@19.2.3)
-    transitivePeerDependencies:
-      - '@types/react'
-      - react-dom
-      - supports-color
-
-  antd-style@4.1.0(@types/react@19.2.8)(antd@5.29.1(date-fns@4.1.0)(react-dom@19.2.3(react@19.2.3))(react@19.2.3))(react-dom@19.2.3(react@19.2.3))(react@19.2.3):
-    dependencies:
-      '@ant-design/cssinjs': 2.0.2(react-dom@19.2.3(react@19.2.3))(react@19.2.3)
       '@babel/runtime': 7.28.6
       '@emotion/cache': 11.14.0
       '@emotion/css': 11.13.5
@@ -8360,8 +8282,6 @@ snapshots:
   is-hexadecimal@2.0.1: {}
 
   is-map@2.0.3: {}
-
-  is-mobile@5.0.0: {}
 
   is-negative-zero@2.0.3: {}
 
