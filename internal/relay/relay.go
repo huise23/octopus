@@ -40,6 +40,27 @@ func Handler(inboundType inbound.InboundType, c *gin.Context) {
 	// 初始化统计和日志
 	apiKeyID := c.GetInt("api_key_id")
 	metrics := NewRelayMetrics(internalRequest.Model)
+	// 过滤敏感信息
+	for i := range internalRequest.Messages {
+		msg := &internalRequest.Messages[i]
+		// 处理简单文本内容
+		if msg.Content.Content != nil {
+			filtered, count := op.SensitiveFilterText(*msg.Content.Content)
+			if count > 0 {
+				msg.Content.Content = &filtered
+			}
+		}
+		// 处理多模态内容中的文本部分
+		for j := range msg.Content.MultipleContent {
+			if msg.Content.MultipleContent[j].Type == "text" && msg.Content.MultipleContent[j].Text != nil {
+				filtered, count := op.SensitiveFilterText(*msg.Content.MultipleContent[j].Text)
+				if count > 0 {
+					msg.Content.MultipleContent[j].Text = &filtered
+				}
+			}
+		}
+	}
+
 	metrics.SetInternalRequest(internalRequest)
 	metrics.SetAPIKeyID(apiKeyID)
 	// 获取通道分组

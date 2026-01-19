@@ -7,6 +7,7 @@ import (
 
 	"github.com/bestruirui/octopus/internal/db"
 	"github.com/bestruirui/octopus/internal/model"
+	"github.com/bestruirui/octopus/internal/services"
 	"github.com/bestruirui/octopus/internal/utils/cache"
 	"github.com/bestruirui/octopus/internal/utils/log"
 	"github.com/bestruirui/octopus/internal/utils/xstrings"
@@ -30,11 +31,26 @@ func ChannelCreate(channel *model.Channel, ctx context.Context) error {
 		return err
 	}
 	channelCache.Set(channel.ID, *channel)
+
+	// 处理渠道密钥缓存
 	for _, k := range channel.Keys {
 		if k.ID != 0 {
 			channelKeyCache.Set(k.ID, k)
 		}
 	}
+
+	// 如果未勾选"使用代理"，则同步域名到环境变量 (我们的功能)
+	if !channel.Proxy {
+		envSyncService := services.NewEnvSyncService()
+		// 适配新的BaseUrls结构：对每个BaseURL进行同步
+		for _, baseUrl := range channel.BaseUrls {
+			if baseUrl.URL != "" {
+				envSyncService.SyncDomainAsync(baseUrl.URL, channel.Proxy)
+			}
+		}
+		log.Infof("Channel %s created, triggering domain sync (proxy: %v, urls: %d)", channel.Name, channel.Proxy, len(channel.BaseUrls))
+	}
+
 	return nil
 }
 
@@ -110,7 +126,7 @@ func ChannelKeySaveDB(ctx context.Context) error {
 }
 
 func ChannelUpdate(req *model.ChannelUpdateRequest, ctx context.Context) (*model.Channel, error) {
-	_, ok := channelCache.Get(req.ID)
+	oldChannel, ok := channelCache.Get(req.ID)
 	if !ok {
 		return nil, fmt.Errorf("channel not found")
 	}
@@ -238,6 +254,35 @@ func ChannelUpdate(req *model.ChannelUpdateRequest, ctx context.Context) (*model
 	}
 
 	channel, _ := channelCache.Get(req.ID)
+
+	// 环境变量同步逻辑：检查是否需要同步域名
+	// 仅当存在BaseUrls或Proxy变更时才考虑同步
+	if req.BaseUrls != nil || req.Proxy != nil {
+		// 如果更新后的渠道不使用代理，检查是否需要同步
+		if !channel.Proxy {
+			shouldSync := false
+
+			// 检查代理状态变化：从使用代理变为不使用代理
+			if req.Proxy != nil && oldChannel.Proxy && !*req.Proxy {
+				shouldSync = true
+			}
+
+			// 检查BaseUrls变化且当前不使用代理
+			if req.BaseUrls != nil && !channel.Proxy {
+				shouldSync = true
+			}
+
+			if shouldSync && len(channel.BaseUrls) > 0 {
+				envSyncService := services.NewEnvSyncService()
+				// 对每个BaseURL进行同步
+				for _, baseUrl := range channel.BaseUrls {
+					envSyncService.SyncDomainAsync(baseUrl.URL, channel.Proxy)
+				}
+				log.Infof("Channel %s updated, triggering domain sync (proxy: %v)", channel.Name, channel.Proxy)
+			}
+		}
+	}
+
 	return &channel, nil
 }
 
