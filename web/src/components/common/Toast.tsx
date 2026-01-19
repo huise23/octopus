@@ -14,43 +14,47 @@ const icons = {
     loading: <Loader2 className="size-5 text-muted-foreground animate-spin" />,
 };
 
-export const toast = {
-    success: (message: string, options?: ToastOptions) => {
-        sonnerToast(message, {
-            icon: icons.success,
-            position: 'top-left',
-            ...options,
-        });
-    },
-    error: (message: string, options?: ToastOptions) => {
-        sonnerToast(message, {
-            icon: icons.error,
-            position: 'top-left',
-            ...options,
-        });
-    },
-    warning: (message: string, options?: ToastOptions) => {
-        sonnerToast(message, {
-            icon: icons.warning,
-            position: 'top-left',
-            ...options,
-        });
-    },
-    info: (message: string, options?: ToastOptions) => {
-        sonnerToast(message, {
-            icon: icons.info,
-            position: 'top-left',
-            ...options,
-        });
-    },
-    loading: (message: string, options?: ToastOptions) => {
-        return sonnerToast(message, {
-            icon: icons.loading,
-            duration: Infinity,
-            position: 'top-left',
-            ...options,
-        });
-    },
-    dismiss: sonnerToast.dismiss,
-};
+ export const toast = {
+     success: (message: string, options?: ToastOptions) => {
+         sonnerToast(message, {
+             icon: icons.success,
+             position: 'top-left',
+             description: options?.description,
+             duration: options?.duration,
+         });
+     },
+     error: (message: string, options?: ToastOptions) => {
+         sonnerToast(message, {
+             icon: icons.error,
+             position: 'top-left',
+             description: options?.description,
+             duration: options?.duration,
+         });
+     },
+     warning: (message: string, options?: ToastOptions) => {
+         sonnerToast(message, {
+             icon: icons.warning,
+             position: 'top-left',
+             description: options?.description,
+             duration: options?.duration,
+         });
+     },
+     info: (message: string, options?: ToastOptions) => {
+         sonnerToast(message, {
+             icon: icons.info,
+             position: 'top-left',
+             description: options?.description,
+             duration: options?.duration,
+         });
+     },
+     loading: (message: string, options?: ToastOptions) => {
+         return sonnerToast(message, {
+             icon: icons.loading,
+             duration: Infinity,
+             position: 'top-left',
+             description: options?.description,
+         });
+     },
+     dismiss: sonnerToast.dismiss,
+ };
 
