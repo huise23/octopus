@@ -256,11 +256,12 @@ build_frontend() {
 
 update_price() {
     log_step "Updating price"
-    if ! python3 scripts/updatePrice.py; then
-        log_error "Failed to update price"
-        return 1
+    if python3 scripts/updatePrice.py; then
+        log_success "Price updated"
+    else
+        log_warning "Failed to update price, continuing with existing price data"
+        log_warning "Price data will be available after the service starts"
     fi
-    log_success "Price updated"
 }
 
 
