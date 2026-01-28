@@ -89,6 +89,7 @@ func Handler(inboundType inbound.InboundType, c *gin.Context) {
 			default:
 			}
 
+			attemptStart := time.Now()
 			channel, err := op.ChannelGet(item.ChannelID, c.Request.Context())
 			if err != nil {
 				log.Warnf("failed to get channel: %v", err)
@@ -116,6 +117,21 @@ func Handler(inboundType inbound.InboundType, c *gin.Context) {
 				continue
 			}
 
+			// 验证 channel 类型与请求类型匹配
+			if internalRequest.IsEmbeddingRequest() && !outbound.IsEmbeddingChannelType(channel.Type) {
+				log.Warnf("channel type %d is not compatible with embedding request for channel: %s", channel.Type, channel.Name)
+				lastErr = fmt.Errorf("channel type %d not compatible with embedding request", channel.Type)
+				item = b.Next(group.Items, item)
+				continue
+			}
+
+			if internalRequest.IsChatRequest() && !outbound.IsChatChannelType(channel.Type) {
+				log.Warnf("channel type %d is not compatible with chat request for channel: %s", channel.Type, channel.Name)
+				lastErr = fmt.Errorf("channel type %d not compatible with chat request", channel.Type)
+				item = b.Next(group.Items, item)
+				continue
+			}
+
 			rc := &relayContext{
 				c:                    c,
 				inAdapter:            inAdapter,
@@ -128,21 +144,27 @@ func Handler(inboundType inbound.InboundType, c *gin.Context) {
 			}
 
 			if statusCode, err := rc.forward(); err == nil {
+				// 成功
+				attemptDuration := time.Since(attemptStart)
+				metrics.AddAttempt(round+1, i+1, true, nil, attemptDuration)
 				rc.collectResponse()
 				rc.usedKey.StatusCode = statusCode
 				rc.usedKey.LastUseTimeStamp = time.Now().Unix()
 				rc.usedKey.TotalCost += metrics.Stats.InputCost + metrics.Stats.OutputCost
 				op.ChannelKeyUpdate(rc.usedKey)
-				metrics.Save(c.Request.Context(), true, nil)
+				metrics.Save(c.Request.Context(), true, nil, round+1)
 				return
 			} else {
+				// 失败
+				attemptDuration := time.Since(attemptStart)
+				metrics.AddAttempt(round+1, i+1, false, err, attemptDuration)
 				rc.usedKey.StatusCode = statusCode
 				rc.usedKey.LastUseTimeStamp = time.Now().Unix()
 				op.ChannelKeyUpdate(rc.usedKey)
 				if c.Writer.Written() {
 					// Streaming responses may have already started; retrying would corrupt the client stream.
 					rc.collectResponse()
-					metrics.Save(c.Request.Context(), false, err)
+					metrics.Save(c.Request.Context(), false, err, 0)
 					return
 				}
 				lastErr = fmt.Errorf("channel %s failed: %v", channel.Name, err)
@@ -152,7 +174,7 @@ func Handler(inboundType inbound.InboundType, c *gin.Context) {
 	}
 
 	// 所有通道都失败
-	metrics.Save(c.Request.Context(), false, lastErr)
+	metrics.Save(c.Request.Context(), false, lastErr, 0)
 	resp.Error(c, http.StatusBadGateway, "all channels failed")
 }
 
