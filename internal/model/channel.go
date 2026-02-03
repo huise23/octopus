@@ -153,3 +153,18 @@ func (c *Channel) GetChannelKey() ChannelKey {
 	}
 	return best
 }
+
+// GetAllEnabledKeys returns all enabled keys for the channel (for model fetching)
+func (c *Channel) GetAllEnabledKeys() []ChannelKey {
+	if c == nil || len(c.Keys) == 0 {
+		return nil
+	}
+
+	var enabledKeys []ChannelKey
+	for _, k := range c.Keys {
+		if k.Enabled && k.ChannelKey != "" {
+			enabledKeys = append(enabledKeys, k)
+		}
+	}
+	return enabledKeys
+}
