@@ -28,16 +28,19 @@ func FetchModels(ctx context.Context, request model.Channel) ([]string, error) {
 	if err != nil {
 		return nil, err
 	}
-	if request.MatchRegex != nil {
+	if request.MatchRegex != nil && *request.MatchRegex != "" {
 		matchModel := make([]string, 0)
-		re := regexp2.MustCompile(*request.MatchRegex, regexp2.ECMAScript)
-		for i := 0; i < len(fetchModel); i++ {
-			matched, err := re.MatchString(fetchModel[i])
+		re, err := regexp2.Compile(*request.MatchRegex, regexp2.ECMAScript)
+		if err != nil {
+			return nil, err
+		}
+		for _, model := range fetchModel {
+			matched, err := re.MatchString(model)
 			if err != nil {
 				return nil, err
 			}
 			if matched {
-				matchModel = append(matchModel, fetchModel[i])
+				matchModel = append(matchModel, model)
 			}
 		}
 		return matchModel, nil
@@ -63,6 +66,11 @@ func fetchOpenAIModels(client *http.Client, ctx context.Context, request model.C
 			nil,
 		)
 		req.Header.Set("Authorization", "Bearer "+key.ChannelKey)
+		for _, header := range request.CustomHeader {
+			if header.HeaderKey != "" {
+				req.Header.Set(header.HeaderKey, header.HeaderValue)
+			}
+		}
 
 		resp, err := client.Do(req)
 		if err != nil {
@@ -114,7 +122,11 @@ func fetchGeminiModels(client *http.Client, ctx context.Context, request model.C
 				nil,
 			)
 			req.Header.Set("X-Goog-Api-Key", key.ChannelKey)
-
+			for _, header := range request.CustomHeader {
+				if header.HeaderKey != "" {
+					req.Header.Set(header.HeaderKey, header.HeaderValue)
+				}
+			}
 			if pageToken != "" {
 				q := req.URL.Query()
 				q.Add("pageToken", pageToken)
@@ -182,7 +194,11 @@ func fetchAnthropicModels(client *http.Client, ctx context.Context, request mode
 			)
 			req.Header.Set("X-Api-Key", key.ChannelKey)
 			req.Header.Set("Anthropic-Version", "2023-06-01")
-
+			for _, header := range request.CustomHeader {
+				if header.HeaderKey != "" {
+					req.Header.Set(header.HeaderKey, header.HeaderValue)
+				}
+			}
 			// 设置多页参数
 			q := req.URL.Query()
 			if afterID != "" {
