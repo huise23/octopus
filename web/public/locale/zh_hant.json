@@ -128,6 +128,24 @@
             "example": "只允許指定域名: https://example.com,https://example2.com"
         },
         "saved": "已儲存",
+        "sensitive": {
+            "title": "敏感資訊過濾",
+            "globalEnabled": "全域開關",
+            "rules": "過濾規則",
+            "addRule": "新增規則",
+            "editRule": "編輯規則",
+            "ruleName": "規則名稱",
+            "pattern": "正規表示式",
+            "replacement": "替換文字",
+            "priority": "優先順序",
+            "ruleDescription": "使用正規表示式定義需要過濾的敏感資訊模式",
+            "cancel": "取消",
+            "save": "儲存",
+            "created": "規則已建立",
+            "deleted": "規則已刪除",
+            "requiredFields": "請填寫必填欄位",
+            "invalidPattern": "無效的正規表示式"
+        },
         "backup": {
             "title": "備份 / 復原",
             "export": {
