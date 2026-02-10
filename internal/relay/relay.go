@@ -74,6 +74,8 @@ func Handler(inboundType inbound.InboundType, c *gin.Context) {
 	var lastErr error
 	itemCount := len(group.Items)
 	b := balancer.GetBalancer(group.Mode)
+	cb := GetCircuitBreaker()
+
 	for round := 0; round < maxRounds; round++ {
 		item := b.Select(group.Items)
 		if item == nil {
@@ -87,6 +89,14 @@ func Handler(inboundType inbound.InboundType, c *gin.Context) {
 				log.Infof("request context canceled, stopping retry")
 				return
 			default:
+			}
+
+			shouldSkip, skipReason, errorType := cb.ShouldSkip(group.ID, item.ChannelID, item.ModelName)
+			if shouldSkip {
+				log.Infof("circuit breaker: skipping channel %s (model: %s) - %s, error type: %s",
+					item.ChannelID, item.ModelName, skipReason, GetErrorTypeName(errorType))
+				item = b.Next(group.Items, item)
+				continue
 			}
 
 			attemptStart := time.Now()
@@ -155,14 +165,18 @@ func Handler(inboundType inbound.InboundType, c *gin.Context) {
 				metrics.Save(c.Request.Context(), true, nil, round+1)
 				return
 			} else {
-				// 失败
 				attemptDuration := time.Since(attemptStart)
+
+				errType := ClassifyError(err, statusCode, "")
+				cb.RecordFailure(group.ID, item.ChannelID, item.ModelName, statusCode, errType)
+				log.Infof("circuit breaker: recorded failure for channel %s (model: %s), error type: %s, status code: %d",
+					channel.Name, item.ModelName, GetErrorTypeName(errType), statusCode)
+
 				metrics.AddAttempt(round+1, i+1, false, err, attemptDuration)
 				rc.usedKey.StatusCode = statusCode
 				rc.usedKey.LastUseTimeStamp = time.Now().Unix()
 				op.ChannelKeyUpdate(rc.usedKey)
 				if c.Writer.Written() {
-					// Streaming responses may have already started; retrying would corrupt the client stream.
 					rc.collectResponse()
 					metrics.Save(c.Request.Context(), false, err, 0)
 					return
@@ -234,9 +248,9 @@ func (rc *relayContext) forward() (int, error) {
 	if response.StatusCode < 200 || response.StatusCode >= 300 {
 		body, err := io.ReadAll(response.Body)
 		if err != nil {
-			return 0, fmt.Errorf("failed to read response body: %w", err)
+			return response.StatusCode, fmt.Errorf("failed to read response body: %w", err)
 		}
-		return 0, fmt.Errorf("upstream error: %d: %s", response.StatusCode, string(body))
+		return response.StatusCode, fmt.Errorf("upstream error: %d: %s", response.StatusCode, string(body))
 	}
 
 	// 处理响应
