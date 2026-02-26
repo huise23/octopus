@@ -7,7 +7,6 @@ import (
 
 	"github.com/bestruirui/octopus/internal/conf"
 	dbmodel "github.com/bestruirui/octopus/internal/model"
-	"github.com/bestruirui/octopus/internal/relay/balancer"
 	"github.com/bestruirui/octopus/internal/transformer/model"
 	"github.com/gin-gonic/gin"
 )
@@ -41,41 +40,20 @@ var hopByHopHeaders = map[string]bool{
 	"content-length":      true,
 	"host":                true,
 	"accept-encoding":     true,
-	"x-forwarded-for":     true,
-	"x-forwarded-host":    true,
-	"x-forwarded-proto":   true,
-	"x-forwarded-port":    true,
-	"x-real-ip":           true,
-	"forwarded":           true,
-	"cf-connecting-ip":    true,
-	"true-client-ip":      true,
-	"x-client-ip":         true,
-	"x-cluster-client-ip": true,
 }
 
-type relayRequest struct {
+// relayContext 保存请求转发过程中的上下文信息
+type relayContext struct {
 	c               *gin.Context
 	inAdapter       model.Inbound
+	outAdapter      model.Outbound
 	internalRequest *model.InternalLLMRequest
+	channel         *dbmodel.Channel
 	metrics         *RelayMetrics
-	apiKeyID        int
-	requestModel    string
-	iter            *balancer.Iterator
-}
 
-// relayAttempt 尝试级上下文
-type relayAttempt struct {
-	*relayRequest // 嵌入请求级上下文
+	usedKey dbmodel.ChannelKey
 
-	outAdapter           model.Outbound
-	channel              *dbmodel.Channel
-	usedKey              dbmodel.ChannelKey
+	// firstTokenTimeOutSec: streaming-only "time to first token" timeout for the selected group/channel.
+	// When >0 and stream doesn't produce any transformed output within this duration, we abort and retry next channel.
 	firstTokenTimeOutSec int
-}
-
-// attemptResult 封装单次尝试的结果
-type attemptResult struct {
-	Success bool  // 是否成功
-	Written bool  // 流式响应是否已开始写入（不可重试）
-	Err     error // 失败时的错误
 }

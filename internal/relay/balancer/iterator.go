@@ -1,7 +1,6 @@
 package balancer
 
 import (
-	"fmt"
 	"time"
 
 	"github.com/bestruirui/octopus/internal/model"
@@ -22,13 +21,13 @@ type Iterator struct {
 
 // NewIterator 创建负载均衡迭代器
 // 自动处理：策略排序 + 粘性通道提前
-func NewIterator(group model.Group, apiKeyID int, requestModel string) *Iterator {
-	b := GetBalancer(group.Mode)
-	candidates := b.Candidates(group.Items)
+func NewIterator(group model.Group, apiKeyID int, requestModel string, stickyTTL time.Duration) *Iterator {
+	// 直接使用 group.Items 作为候选列表
+	candidates := make([]model.GroupItem, len(group.Items))
+	copy(candidates, group.Items)
 
 	stickyIdx := -1
-	if group.SessionKeepTime > 0 {
-		stickyTTL := time.Duration(group.SessionKeepTime) * time.Second
+	if stickyTTL > 0 {
 		if sticky := GetSticky(apiKeyID, requestModel, stickyTTL); sticky != nil {
 			for i, item := range candidates {
 				if item.ChannelID == sticky.ChannelID {
@@ -80,56 +79,47 @@ func (it *Iterator) Index() int {
 }
 
 // Skip 记录当前通道被跳过（通道禁用、无Key、类型不兼容等）
-func (it *Iterator) Skip(channelID, channelKeyID int, channelName, msg string) {
+func (it *Iterator) Skip(channelID int, channelName, msg string) {
 	it.count++
 	it.attempts = append(it.attempts, model.ChannelAttempt{
-		ChannelID:    channelID,
-		ChannelKeyID: channelKeyID,
-		ChannelName:  channelName,
-		ModelName:    it.candidates[it.index].ModelName,
-		AttemptNum:   it.count,
-		Status:       model.AttemptSkipped,
-		Sticky:       it.IsSticky(),
-		Msg:          msg,
+		ChannelID:   channelID,
+		ChannelName: channelName,
+		ModelName:   it.candidates[it.index].ModelName,
+		AttemptNum:  it.count,
+		Success:     false,
+		Error:       msg,
 	})
 }
 
-// SkipCircuitBreak 检查熔断状态，若已熔断自动记录（含剩余冷却时间）并返回 true
-func (it *Iterator) SkipCircuitBreak(channelID, channelKeyID int, channelName string) bool {
+// SkipCircuitBreak 检查熔断状态，若已熔断自动记录并返回 true
+// keyID 参数用于熔断检查，传 0 表示不区分 key
+func (it *Iterator) SkipCircuitBreak(channelID, keyID int, channelName string) bool {
 	modelName := it.candidates[it.index].ModelName
-	tripped, remaining := IsTripped(channelID, channelKeyID, modelName)
+	tripped := IsTripped(channelID, keyID, modelName)
 	if !tripped {
 		return false
 	}
-	msg := "circuit breaker tripped"
-	if remaining > 0 {
-		msg = fmt.Sprintf("circuit breaker tripped, remaining cooldown: %ds", int(remaining.Seconds()))
-	}
 	it.count++
 	it.attempts = append(it.attempts, model.ChannelAttempt{
-		ChannelID:    channelID,
-		ChannelKeyID: channelKeyID,
-		ChannelName:  channelName,
-		ModelName:    modelName,
-		AttemptNum:   it.count,
-		Status:       model.AttemptCircuitBreak,
-		Sticky:       it.IsSticky(),
-		Msg:          msg,
+		ChannelID:   channelID,
+		ChannelName: channelName,
+		ModelName:   modelName,
+		AttemptNum:  it.count,
+		Success:     false,
+		Error:       "circuit_break",
 	})
 	return true
 }
 
 // StartAttempt 开始一次真实转发尝试，返回 Span 用于记录结果
-func (it *Iterator) StartAttempt(channelID, channelKeyID int, channelName string) *AttemptSpan {
+func (it *Iterator) StartAttempt(channelID int, channelName string) *AttemptSpan {
 	it.count++
 	return &AttemptSpan{
 		attempt: model.ChannelAttempt{
-			ChannelID:    channelID,
-			ChannelKeyID: channelKeyID,
-			ChannelName:  channelName,
-			ModelName:    it.candidates[it.index].ModelName,
-			AttemptNum:   it.count,
-			Sticky:       it.IsSticky(),
+			ChannelID:   channelID,
+			ChannelName: channelName,
+			ModelName:   it.candidates[it.index].ModelName,
+			AttemptNum:  it.count,
 		},
 		startTime: time.Now(),
 		iter:      it,
@@ -150,14 +140,14 @@ type AttemptSpan struct {
 }
 
 // End 结束尝试：设置状态，自动计算耗时，追加到 Iterator
-func (s *AttemptSpan) End(status model.AttemptStatus, statusCode int, msg string) {
+func (s *AttemptSpan) End(success bool, msg string) {
 	if s.ended {
 		return
 	}
 	s.ended = true
-	s.attempt.Status = status
+	s.attempt.Success = success
+	s.attempt.Error = msg
 	s.attempt.Duration = int(time.Since(s.startTime).Milliseconds())
-	s.attempt.Msg = msg
 	s.iter.attempts = append(s.iter.attempts, s.attempt)
 }
 

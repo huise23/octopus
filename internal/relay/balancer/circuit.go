@@ -5,8 +5,6 @@ import (
 	"sync"
 	"time"
 
-	"github.com/bestruirui/octopus/internal/model"
-	"github.com/bestruirui/octopus/internal/op"
 	"github.com/bestruirui/octopus/internal/utils/log"
 )
 
@@ -14,18 +12,18 @@ import (
 type CircuitState int
 
 const (
-	StateClosed   CircuitState = iota // 正常通行
-	StateOpen                         // 熔断中，拒绝所有请求
-	StateHalfOpen                     // 半开，仅允许单个试探请求
+	StateClosed CircuitState = iota // 正常通行
+	StateOpen                       // 熔断中，拒绝所有请求
 )
 
 // circuitEntry 单个熔断器条目
 type circuitEntry struct {
-	State               CircuitState
-	ConsecutiveFailures int64
-	LastFailureTime     time.Time
-	TripCount           int // 累计熔断触发次数（用于指数退避）
-	mu                  sync.Mutex
+	State           CircuitState
+	Failures        int64           // 总失败次数（成功后清零）
+	LastFailureTime time.Time       // 最近一次失败时间
+	FailedDays      map[string]bool // 记录发生失败的日期 key: "YYYY-MM-DD"
+	PermanentBlock  bool            // 永不重试标记（3天失败后设为true）
+	mu              sync.Mutex
 }
 
 // 全局熔断器存储
@@ -41,82 +39,67 @@ func getOrCreateEntry(key string) *circuitEntry {
 	if v, ok := globalBreaker.Load(key); ok {
 		return v.(*circuitEntry)
 	}
-	entry := &circuitEntry{State: StateClosed}
+	entry := &circuitEntry{
+		State:      StateClosed,
+		FailedDays: make(map[string]bool),
+	}
 	actual, _ := globalBreaker.LoadOrStore(key, entry)
 	return actual.(*circuitEntry)
 }
 
-// getThreshold 获取熔断阈值配置
-func getThreshold() int64 {
-	v, err := op.SettingGetInt(model.SettingKeyCircuitBreakerThreshold)
-	if err != nil || v <= 0 {
-		return 5
-	}
-	return int64(v)
-}
-
-// GetCooldown 获取当前冷却时间（带指数退避）
-func GetCooldown(tripCount int) time.Duration {
-	base, err := op.SettingGetInt(model.SettingKeyCircuitBreakerCooldown)
-	if err != nil || base <= 0 {
-		base = 60
-	}
-	maxCooldown, err := op.SettingGetInt(model.SettingKeyCircuitBreakerMaxCooldown)
-	if err != nil || maxCooldown <= 0 {
-		maxCooldown = 600
-	}
-
-	// 指数退避：baseCooldown * 2^(tripCount-1)
-	cooldown := base
-	if tripCount > 1 {
-		shift := tripCount - 1
-		if shift > 20 { // 防止溢出
-			shift = 20
-		}
-		cooldown = base << shift
-	}
-	if cooldown > maxCooldown {
-		cooldown = maxCooldown
-	}
-
-	return time.Duration(cooldown) * time.Second
-}
-
 // IsTripped 检查通道是否处于熔断状态
-// 返回 tripped=true 表示该通道应被跳过，remaining 为剩余冷却时间
-func IsTripped(channelID, keyID int, modelName string) (tripped bool, remaining time.Duration) {
+// 返回 true 表示该通道应被跳过
+func IsTripped(channelID, keyID int, modelName string) bool {
 	key := circuitKey(channelID, keyID, modelName)
 	v, ok := globalBreaker.Load(key)
 	if !ok {
-		return false, 0 // 无记录，视为 Closed
+		return false
 	}
 	entry := v.(*circuitEntry)
 
 	entry.mu.Lock()
 	defer entry.mu.Unlock()
 
-	switch entry.State {
-	case StateClosed:
-		return false, 0
+	return entry.State == StateOpen
+}
 
-	case StateOpen:
-		cooldown := GetCooldown(entry.TripCount)
-		elapsed := time.Since(entry.LastFailureTime)
-		if elapsed >= cooldown {
-			entry.State = StateHalfOpen
-			log.Infof("circuit breaker [%s] Open -> HalfOpen (cooldown %v elapsed)", key, cooldown)
-			return false, 0
-		}
-		// 仍在冷却中
-		return true, cooldown - elapsed
-
-	case StateHalfOpen:
-		// 已有试探请求在进行中，拒绝其他请求
-		return true, 0
-
-	default:
-		return false, 0
+// ShouldRetry 判断熔断的通道是否符合重试条件
+// 用于后台探测协程判断是否应该尝试恢复该通道
+func ShouldRetry(channelID, keyID int, modelName string) bool {
+	key := circuitKey(channelID, keyID, modelName)
+	v, ok := globalBreaker.Load(key)
+	if !ok {
+		return false
 	}
+	entry := v.(*circuitEntry)
+
+	entry.mu.Lock()
+	defer entry.mu.Unlock()
+
+	// 非熔断状态不需要重试
+	if entry.State != StateOpen {
+		return false
+	}
+
+	// 永久封禁不再重试
+	if entry.PermanentBlock {
+		return false
+	}
+
+	now := time.Now()
+
+	// 失败次数>3 且 24小时内不再尝试
+	if entry.Failures > 3 && now.Sub(entry.LastFailureTime) < 24*time.Hour {
+		return false
+	}
+
+	// 时间条件：now - LastFailureTime > 10分钟 * 失败次数
+	interval := time.Duration(entry.Failures) * 10 * time.Minute
+	if now.Sub(entry.LastFailureTime) <= interval {
+		return false
+	}
+
+	return true
 }
 
 // RecordSuccess 记录成功，重置熔断器状态
@@ -131,17 +114,18 @@ func RecordSuccess(channelID, keyID int, modelName string) {
 	entry.mu.Lock()
 	defer entry.mu.Unlock()
 
-	if entry.State == StateHalfOpen {
-		log.Infof("circuit breaker [%s] HalfOpen -> Closed (probe succeeded)", key)
+	if entry.State == StateOpen {
+		log.Infof("circuit breaker [%s] Open -> Closed (probe succeeded)", key)
 	}
 
 	// 重置全部状态
 	entry.State = StateClosed
-	entry.ConsecutiveFailures = 0
-	entry.TripCount = 0
+	entry.Failures = 0
+	entry.FailedDays = make(map[string]bool)
+	entry.PermanentBlock = false
 }
 
-// RecordFailure 记录失败，可能触发熔断
+// RecordFailure 记录失败，立即触发熔断
 func RecordFailure(channelID, keyID int, modelName string) {
 	key := circuitKey(channelID, keyID, modelName)
 	entry := getOrCreateEntry(key)
@@ -149,29 +133,55 @@ func RecordFailure(channelID, keyID int, modelName string) {
 	entry.mu.Lock()
 	defer entry.mu.Unlock()
 
-	entry.LastFailureTime = time.Now()
+	now := time.Now()
+	prevState := entry.State
 
-	switch entry.State {
-	case StateClosed:
-		entry.ConsecutiveFailures++
-		threshold := getThreshold()
-		if entry.ConsecutiveFailures >= threshold {
-			entry.State = StateOpen
-			entry.TripCount++
-			log.Warnf("circuit breaker [%s] Closed -> Open (failures=%d >= threshold=%d, tripCount=%d, cooldown=%v)",
-				key, entry.ConsecutiveFailures, threshold, entry.TripCount, GetCooldown(entry.TripCount))
-		}
+	// 立即熔断
+	entry.State = StateOpen
+	entry.LastFailureTime = now
+	entry.Failures++
 
-	case StateHalfOpen:
-		// 试探失败，重新进入 Open 状态，TripCount 递增（冷却时间翻倍）
-		entry.State = StateOpen
-		entry.TripCount++
-		entry.ConsecutiveFailures = 0 // 重新开始计数
-		log.Warnf("circuit breaker [%s] HalfOpen -> Open (probe failed, tripCount=%d, cooldown=%v)",
-			key, entry.TripCount, GetCooldown(entry.TripCount))
-
-	case StateOpen:
-		// 理论上不应该在 Open 状态下接收到失败记录（请求应被拒绝），
-		// 但为安全起见仍更新失败时间
+	// 记录失败日期
+	if entry.FailedDays == nil {
+		entry.FailedDays = make(map[string]bool)
 	}
+	day := now.Format("2006-01-02")
+	entry.FailedDays[day] = true
+
+	// 3天都有失败则永久封禁
+	if len(entry.FailedDays) >= 3 {
+		entry.PermanentBlock = true
+		log.Warnf("circuit breaker [%s] permanently blocked (failed on %d different days)",
+			key, len(entry.FailedDays))
+	} else if prevState == StateClosed {
+		log.Warnf("circuit breaker [%s] Closed -> Open (failure #%d, day %s)",
+			key, entry.Failures, day)
+	} else {
+		log.Warnf("circuit breaker [%s] probe failed (failure #%d, day %s, failed days: %d)",
+			key, entry.Failures, day, len(entry.FailedDays))
+	}
+}
+
+// GetRetryInterval 获取下次可重试的间隔时间（供外部查询）
+func GetRetryInterval(channelID, keyID int, modelName string) time.Duration {
+	key := circuitKey(channelID, keyID, modelName)
+	v, ok := globalBreaker.Load(key)
+	if !ok {
+		return 0
+	}
+	entry := v.(*circuitEntry)
+
+	entry.mu.Lock()
+	defer entry.mu.Unlock()
+
+	if entry.State != StateOpen {
+		return 0
+	}
+
+	interval := time.Duration(entry.Failures) * 10 * time.Minute
+	elapsed := time.Since(entry.LastFailureTime)
+	if elapsed >= interval {
+		return 0
+	}
+	return interval - elapsed
 }

@@ -97,22 +97,19 @@ export function CardContent({ channel, stats }: { channel: Channel; stats: Stats
         const nextChannelProxy = formData.channel_proxy.trim();
         const curChannelProxy = channel.channel_proxy ?? '';
         if (nextChannelProxy !== curChannelProxy) {
-            // Empty string means "clear" for patch semantics; backend maps it to NULL.
-            req.channel_proxy = nextChannelProxy;
+            req.channel_proxy = nextChannelProxy ? nextChannelProxy : null;
         }
 
         const nextParamOverride = formData.param_override.trim();
         const curParamOverride = channel.param_override ?? '';
         if (nextParamOverride !== curParamOverride) {
-            // Empty string means "clear" for patch semantics; backend maps it to NULL.
-            req.param_override = nextParamOverride;
+            req.param_override = nextParamOverride ? nextParamOverride : null;
         }
 
         const nextMatchRegex = formData.match_regex.trim();
         const curMatchRegex = channel.match_regex ?? '';
         if (nextMatchRegex !== curMatchRegex) {
-            // Empty string means "clear" for patch semantics; backend maps it to NULL.
-            req.match_regex = nextMatchRegex;
+            req.match_regex = nextMatchRegex ? nextMatchRegex : null;
         }
 
         const originalKeys = channel.keys;

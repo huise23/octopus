@@ -20,9 +20,6 @@ export const SettingKey = {
     RelayLogKeepPeriod: 'relay_log_keep_period',
     CORSAllowOrigins: 'cors_allow_origins',
     SensitiveFilterEnabled: 'sensitive_filter_enabled',
-    CircuitBreakerThreshold: 'circuit_breaker_threshold',
-    CircuitBreakerCooldown: 'circuit_breaker_cooldown',
-    CircuitBreakerMaxCooldown: 'circuit_breaker_max_cooldown',
 } as const;
 
 /**

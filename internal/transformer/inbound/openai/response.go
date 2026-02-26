@@ -953,10 +953,6 @@ func convertToInternalRequest(req *ResponsesRequest) (*model.InternalLLMRequest,
 		TransformerMetadata: map[string]string{},
 	}
 
-	if req.Input.Text == nil && len(req.Input.Items) > 0 {
-		chatReq.TransformOptions.ArrayInputs = lo.ToPtr(true)
-	}
-
 	// Convert reasoning
 	if req.Reasoning != nil {
 		if req.Reasoning.Effort != "" {

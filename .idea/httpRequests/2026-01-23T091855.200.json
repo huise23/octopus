@@ -1,0 +1,37 @@
+{
+  "data": {
+    "aff_code": "1BU1",
+    "aff_count": 0,
+    "aff_history_quota": 0,
+    "aff_quota": 0,
+    "discord_id": "",
+    "display_name": "huise23",
+    "email": "",
+    "github_id": "",
+    "group": "default",
+    "id": 5178,
+    "inviter_id": 0,
+    "linux_do_id": "17602",
+    "linux_do_username": "huise23",
+    "oidc_id": "",
+    "permissions": {
+      "sidebar_modules": {
+        "admin": false
+      },
+      "sidebar_settings": true
+    },
+    "quota": 240038865,
+    "request_count": 1053,
+    "role": 1,
+    "setting": "{\"record_ip_log\": true, \"gotify_priority\": 0, \"sidebar_modules\": \"{\\\"chat\\\":{\\\"chat\\\":true,\\\"enabled\\\":true,\\\"playground\\\":true},\\\"console\\\":{\\\"detail\\\":true,\\\"enabled\\\":true,\\\"log\\\":true,\\\"midjourney\\\":true,\\\"task\\\":true,\\\"token\\\":true},\\\"personal\\\":{\\\"enabled\\\":true,\\\"personal\\\":true,\\\"topup\\\":true}}\"}",
+    "sidebar_modules": "{\"chat\":{\"chat\":true,\"enabled\":true,\"playground\":true},\"console\":{\"detail\":true,\"enabled\":true,\"log\":true,\"midjourney\":true,\"task\":true,\"token\":true},\"personal\":{\"enabled\":true,\"personal\":true,\"topup\":true}}",
+    "status": 1,
+    "stripe_customer": "",
+    "telegram_id": "",
+    "used_quota": 20850363,
+    "username": "linuxdo_5178",
+    "wechat_id": ""
+  },
+  "message": "",
+  "success": true
+}

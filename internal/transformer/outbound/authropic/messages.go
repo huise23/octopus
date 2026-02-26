@@ -150,11 +150,7 @@ func (o *MessageOutbound) TransformStream(ctx context.Context, eventData []byte)
 			resp.ID = o.streamID
 			resp.Model = o.streamModel
 
-			if streamEvent.Message.Usage != nil &&
-				(streamEvent.Message.Usage.InputTokens > 0 ||
-					streamEvent.Message.Usage.OutputTokens > 0 ||
-					streamEvent.Message.Usage.CacheReadInputTokens > 0 ||
-					streamEvent.Message.Usage.CacheCreationInputTokens > 0) {
+			if streamEvent.Message.Usage != nil {
 				o.streamUsage = convertAnthropicUsage(streamEvent.Message.Usage)
 				resp.Usage = o.streamUsage
 			}
@@ -322,19 +318,14 @@ func convertToAnthropicRequest(req *model.InternalLLMRequest) *anthropicModel.Me
 }
 
 func resolveMaxTokens(req *model.InternalLLMRequest) int64 {
-	var maxtoken int64 = 1
 	switch {
 	case req.MaxTokens != nil:
-		maxtoken = *req.MaxTokens
+		return *req.MaxTokens
 	case req.MaxCompletionTokens != nil:
-		maxtoken = *req.MaxCompletionTokens
+		return *req.MaxCompletionTokens
 	default:
-		maxtoken = 8192
+		return 8192
 	}
-	if maxtoken < 1 {
-		maxtoken = 1
-	}
-	return maxtoken
 }
 
 func convertSystemPrompt(req *model.InternalLLMRequest) *anthropicModel.SystemPrompt {

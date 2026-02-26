@@ -101,11 +101,7 @@ export function APIKeyDashboard() {
     ));
 
     const toggleTheme = () => setTheme(theme === 'dark' ? 'light' : 'dark');
-    const toggleLanguage = () => {
-        if (locale === 'zh_hans') setLocale('zh_hant');
-        else if (locale === 'zh_hant') setLocale('en');
-        else setLocale('zh_hans');
-    };
+    const toggleLanguage = () => setLocale(locale === 'zh' ? 'en' : 'zh');
 
     return (
         <div className="mx-auto max-w-6xl px-3 md:px-6">

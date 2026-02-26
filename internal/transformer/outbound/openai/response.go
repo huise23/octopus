@@ -13,6 +13,7 @@ import (
 	"github.com/samber/lo"
 
 	"github.com/bestruirui/octopus/internal/transformer/model"
+	"github.com/bestruirui/octopus/internal/utils/log"
 )
 
 // ResponseOutbound implements the Outbound interface for OpenAI Responses API.
@@ -189,7 +190,8 @@ func (o *ResponseOutbound) TransformStream(ctx context.Context, eventData []byte
 								ID:    streamEvent.Item.CallID,
 								Type:  "function",
 								Function: model.FunctionCall{
-									Name: streamEvent.Item.Name,
+									Name:      streamEvent.Item.Name,
+									Arguments: "{}",
 								},
 							},
 						},
@@ -455,7 +457,7 @@ func ConvertToResponsesRequest(req *model.InternalLLMRequest) *ResponsesRequest 
 	result.Instructions = convertInstructionsFromMessages(req.Messages)
 
 	// Convert input from messages
-	result.Input = convertInputFromMessages(req.Messages, req.TransformOptions)
+	result.Input = convertInputFromMessages(req.Messages)
 
 	// Convert tools
 	if len(req.Tools) > 0 {
@@ -465,6 +467,7 @@ func ConvertToResponsesRequest(req *model.InternalLLMRequest) *ResponsesRequest 
 	// Convert tool choice
 	if req.ToolChoice != nil {
 		result.ToolChoice = convertToolChoiceToResponses(req.ToolChoice)
+		log.Infof("tool choice %v", result.ToolChoice)
 	}
 
 	// Convert text options
@@ -513,12 +516,10 @@ func convertInstructionsFromMessages(msgs []model.Message) string {
 	return strings.Join(instructions, "\n")
 }
 
-func convertInputFromMessages(msgs []model.Message, transformOptions model.TransformOptions) ResponsesInput {
+func convertInputFromMessages(msgs []model.Message) ResponsesInput {
 	if len(msgs) == 0 {
 		return ResponsesInput{}
 	}
-
-	wasArrayFormat := transformOptions.ArrayInputs != nil && *transformOptions.ArrayInputs
 
 	// Check for simple single user message
 	nonSystemMsgs := make([]model.Message, 0)
@@ -528,7 +529,7 @@ func convertInputFromMessages(msgs []model.Message, transformOptions model.Trans
 		}
 	}
 
-	if !wasArrayFormat && len(nonSystemMsgs) == 1 && nonSystemMsgs[0].Content.Content != nil && nonSystemMsgs[0].Role == "user" {
+	if len(nonSystemMsgs) == 1 && nonSystemMsgs[0].Content.Content != nil && nonSystemMsgs[0].Role == "user" {
 		return ResponsesInput{Text: nonSystemMsgs[0].Content.Content}
 	}
 

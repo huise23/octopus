@@ -122,7 +122,6 @@ export function ChannelForm({
                     .map((k) => ({ enabled: k.enabled, channel_key: k.channel_key.trim() })),
                 proxy: formData.proxy,
                 match_regex: formData.match_regex.trim() || null,
-                custom_header: formData.custom_header,
             },
             {
                 onSuccess: (data) => {
