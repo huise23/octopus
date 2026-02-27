@@ -39,6 +39,9 @@ export interface RelayLog {
     attempts?: ChannelAttempt[]; // 所有尝试记录
     total_attempts?: number;     // 总尝试次数
     successful_round?: number;   // 成功的轮次
+    probe_input_tokens?: number;  // 探测请求的输入Token
+    probe_output_tokens?: number; // 探测请求的输出Token
+    probe_cost?: number;          // 探测请求的费用
 }
 
 /**
