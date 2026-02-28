@@ -144,17 +144,17 @@ func (m *RelayMetrics) saveStats(success bool, duration time.Duration) {
 	}
 	m.Stats.WaitTime = duration.Milliseconds()
 
-	op.StatsChannelUpdate(m.ChannelID, m.Stats)
+	channelID, channelName := finalChannel(m.Attempts)
 	op.StatsTotalUpdate(m.Stats)
 	op.StatsHourlyUpdate(m.Stats)
 	op.StatsDailyUpdate(context.Background(), m.Stats)
 	op.StatsAPIKeyUpdate(m.APIKeyID, m.Stats)
+	op.StatsChannelUpdate(channelID, m.Stats)
 
-	log.Infof("channel: %d, model: %s, success: %t, wait time: %d, input token: %d, output token: %d, input cost: %f, output cost: %f total cost: %f",
-		m.ChannelID, m.ActualModel, success, m.Stats.WaitTime,
+	log.Infof("relay complete: model=%s, channel=%d(%s), success=%t, duration=%dms, input_token=%d, output_token=%d, input_cost=%f, output_cost=%f, total_cost=%f, attempts=%d, probe=%d",
+		m.RequestModel, channelID, channelName, success, duration.Milliseconds(),
 		m.Stats.InputToken, m.Stats.OutputToken,
-		m.Stats.InputCost, m.Stats.OutputCost, m.Stats.InputCost+m.Stats.OutputCost)
-}
+		m.Stats.InputCost, m.Stats.OutputCost, m.Stats.InputCost+m.Stats.OutputCost, len(m.Attempts), m.Probe.InputTokens+m.Probe.OutputTokens)
 
 // saveLog 保存日志
 func (m *RelayMetrics) saveLog(ctx context.Context, err error, duration time.Duration, successfulRound int) {
