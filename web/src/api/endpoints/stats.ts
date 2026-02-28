@@ -10,6 +10,7 @@ interface StatsMetrics {
     output_token: number;
     probe_input_token: number;
     probe_output_token: number;
+    probe_count: number;
     input_cost: number;
     output_cost: number;
     probe_cost: number;
@@ -23,6 +24,7 @@ export interface StatsMetricsFormatted {
     output_token: ReturnType<typeof formatCount>;
     probe_input_token: ReturnType<typeof formatCount>;
     probe_output_token: ReturnType<typeof formatCount>;
+    probe_count: ReturnType<typeof formatCount>;
     input_cost: ReturnType<typeof formatMoney>;
     output_cost: ReturnType<typeof formatMoney>;
     probe_cost: ReturnType<typeof formatMoney>;
@@ -100,6 +102,7 @@ export function useStatsDaily() {
             probe_input_token: formatCount(item.probe_input_token),
             probe_output_token: formatCount(item.probe_output_token),
             probe_total_token: formatCount(item.probe_input_token + item.probe_output_token),
+            probe_count: formatCount(item.probe_count),
             input_cost: formatMoney(item.input_cost),
             output_cost: formatMoney(item.output_cost),
             total_cost: formatMoney(item.input_cost + item.output_cost),
@@ -132,6 +135,7 @@ export function useStatsHourly() {
             probe_input_token: formatCount(item.probe_input_token),
             probe_output_token: formatCount(item.probe_output_token),
             probe_total_token: formatCount(item.probe_input_token + item.probe_output_token),
+            probe_count: formatCount(item.probe_count),
             input_cost: formatMoney(item.input_cost),
             output_cost: formatMoney(item.output_cost),
             total_cost: formatMoney(item.input_cost + item.output_cost),
@@ -159,6 +163,7 @@ export function useStatsTotal() {
             probe_input_token: formatCount(data.probe_input_token),
             probe_output_token: formatCount(data.probe_output_token),
             probe_total_token: formatCount(data.probe_input_token + data.probe_output_token),
+            probe_count: formatCount(data.probe_count),
             input_cost: formatMoney(data.input_cost),
             output_cost: formatMoney(data.output_cost),
             total_cost: formatMoney(data.input_cost + data.output_cost),
@@ -192,6 +197,7 @@ export function useStatsAPIKey() {
             probe_input_token: formatCount(item.probe_input_token),
             probe_output_token: formatCount(item.probe_output_token),
             probe_total_token: formatCount(item.probe_input_token + item.probe_output_token),
+            probe_count: formatCount(item.probe_count),
             input_cost: formatMoney(item.input_cost),
             output_cost: formatMoney(item.output_cost),
             total_cost: formatMoney(item.input_cost + item.output_cost),

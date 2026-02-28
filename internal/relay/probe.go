@@ -63,10 +63,10 @@ func doProbeRequest(
 	ch *dbmodel.Channel,
 	key *dbmodel.ChannelKey,
 	req *model.InternalLLMRequest,
-) (*model.Usage, error) {
+) (*model.Usage, int, error) {
 	outAdapter := outbound.Get(ch.Type)
 	if outAdapter == nil {
-		return nil, fmt.Errorf("unsupported channel type: %d", ch.Type)
+		return nil, 0, fmt.Errorf("unsupported channel type: %d", ch.Type)
 	}
 
 	outboundReq, err := outAdapter.TransformRequest(
@@ -76,33 +76,33 @@ func doProbeRequest(
 		key.ChannelKey,
 	)
 	if err != nil {
-		return nil, fmt.Errorf("failed to create probe request: %w", err)
+		return nil, 0, fmt.Errorf("failed to create probe request: %w", err)
 	}
 
 	httpClient, err := helper.ChannelHttpClient(ch)
 	if err != nil {
-		return nil, fmt.Errorf("failed to get http client: %w", err)
+		return nil, 0, fmt.Errorf("failed to get http client: %w", err)
 	}
 
 	resp, err := httpClient.Do(outboundReq)
 	if err != nil {
-		return nil, fmt.Errorf("failed to send probe request: %w", err)
+		return nil, 0, fmt.Errorf("failed to send probe request: %w", err)
 	}
 	defer resp.Body.Close()
 
 	if resp.StatusCode < 200 || resp.StatusCode >= 300 {
 		body, _ := io.ReadAll(io.LimitReader(resp.Body, 2048))
-		return nil, fmt.Errorf("probe upstream error: %d: %s", resp.StatusCode, string(body))
+		return nil, resp.StatusCode, fmt.Errorf("probe upstream error: %d: %s", resp.StatusCode, string(body))
 	}
 
 	internalResp, err := outAdapter.TransformResponse(ctx, resp)
 	if err != nil {
-		return nil, fmt.Errorf("failed to transform probe response: %w", err)
+		return nil, resp.StatusCode, fmt.Errorf("failed to transform probe response: %w", err)
 	}
 	if internalResp == nil || internalResp.Usage == nil {
-		return nil, nil
+		return nil, resp.StatusCode, nil
 	}
-	return internalResp.Usage, nil
+	return internalResp.Usage, resp.StatusCode, nil
 }
 
 // RetryUnavailableForChannel 同一 channel 级别的后台重试协程
@@ -142,7 +142,7 @@ func RetryUnavailableForChannel(
 			}
 
 			probeCtx, cancel := context.WithTimeout(ctx, 30*time.Second)
-			usage, err := doProbeRequest(probeCtx, ch, key, probeReq)
+			usage, statusCode, err := doProbeRequest(probeCtx, ch, key, probeReq)
 			cancel()
 
 			if err == nil {
@@ -155,10 +155,11 @@ func RetryUnavailableForChannel(
 							float64(usage.PromptTokens)*p.Input*1e-6 +
 								float64(usage.CompletionTokens)*p.Output*1e-6
 					}
+					metrics.Probe.Count++
 				}
 			} else {
 				log.Warnf("probe for channel %d key %d failed: %v", ch.ID, key.ID, err)
-				balancer.RecordFailure(ch.ID, key.ID, probeReq.Model)
+				balancer.RecordFailureWithStatus(ch.ID, key.ID, probeReq.Model, statusCode)
 			}
 		}
 	}()

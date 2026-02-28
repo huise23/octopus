@@ -18,12 +18,13 @@ const (
 
 // circuitEntry 单个熔断器条目
 type circuitEntry struct {
-	State           CircuitState
-	Failures        int64           // 总失败次数（成功后清零）
-	LastFailureTime time.Time       // 最近一次失败时间
-	FailedDays      map[string]bool // 记录发生失败的日期 key: "YYYY-MM-DD"
-	PermanentBlock  bool            // 永不重试标记（3天失败后设为true）
-	mu              sync.Mutex
+	State             CircuitState
+	Failures          int64           // 总失败次数（成功后清零）
+	RateLimitFailures int64           // 429 失败计数（累计到3才计入失败）
+	LastFailureTime   time.Time       // 最近一次失败时间
+	FailedDays        map[string]bool // 记录发生失败的日期 key: "YYYY-MM-DD"
+	PermanentBlock    bool            // 永不重试标记（3天失败后设为true）
+	mu                sync.Mutex
 }
 
 // 全局熔断器存储
@@ -121,12 +122,20 @@ func RecordSuccess(channelID, keyID int, modelName string) {
 	// 重置全部状态
 	entry.State = StateClosed
 	entry.Failures = 0
+	entry.RateLimitFailures = 0
 	entry.FailedDays = make(map[string]bool)
 	entry.PermanentBlock = false
 }
 
 // RecordFailure 记录失败，立即触发熔断
+
 func RecordFailure(channelID, keyID int, modelName string) {
+	RecordFailureWithStatus(channelID, keyID, modelName, 0)
+}
+
+// RecordFailureWithStatus 记录失败，可根据 statusCode 做特殊处理
+// 对 429：累计 3 次才计为一次失败
+func RecordFailureWithStatus(channelID, keyID int, modelName string, statusCode int) {
 	key := circuitKey(channelID, keyID, modelName)
 	entry := getOrCreateEntry(key)
 
@@ -136,7 +145,17 @@ func RecordFailure(channelID, keyID int, modelName string) {
 	now := time.Now()
 	prevState := entry.State
 
-	// 立即熔断
+	if statusCode == 429 {
+		entry.RateLimitFailures++
+		if entry.RateLimitFailures < 3 {
+			log.Warnf("circuit breaker [%s] rate limited (429 #%d/3)", key, entry.RateLimitFailures)
+			return
+		}
+		// 达到 3 次，计为一次失败并清零
+		entry.RateLimitFailures = 0
+	}
+
+	// 立即熔断（或探测失败）
 	entry.State = StateOpen
 	entry.LastFailureTime = now
 	entry.Failures++

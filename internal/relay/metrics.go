@@ -42,6 +42,7 @@ type ProbeStats struct {
 	InputTokens  int
 	OutputTokens int
 	Cost         float64
+	Count        int
 }
 
 // NewRelayMetrics 创建新的 RelayMetrics
@@ -144,6 +145,7 @@ func (m *RelayMetrics) saveStats(success bool, duration time.Duration) {
 	}
 	m.Stats.ProbeInputToken += int64(m.Probe.InputTokens)
 	m.Stats.ProbeOutputToken += int64(m.Probe.OutputTokens)
+	m.Stats.ProbeCount += int64(m.Probe.Count)
 	m.Stats.ProbeCost += m.Probe.Cost
 	m.Stats.WaitTime = duration.Milliseconds()
 

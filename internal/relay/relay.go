@@ -159,6 +159,7 @@ func Handler(inboundType inbound.InboundType, c *gin.Context) {
 				// 失败
 				attemptDuration := time.Since(attemptStart)
 				metrics.AddAttempt(round+1, i+1, false, err, attemptDuration)
+				balancer.RecordFailureWithStatus(channel.ID, rc.usedKey.ID, item.ModelName, statusCode)
 				rc.usedKey.StatusCode = statusCode
 				rc.usedKey.LastUseTimeStamp = time.Now().Unix()
 				op.ChannelKeyUpdate(rc.usedKey)

@@ -86,6 +86,11 @@
         "chart": {
             "totalRequests": "Total Requests",
             "totalCost": "Total Cost",
+            "totalToken": "Total Tokens",
+            "inputToken": "Input Tokens",
+            "outputToken": "Output Tokens",
+            "retryCount": "Retry Count",
+            "retryToken": "Retry Tokens",
             "timePeriod": "Time Period",
             "period": {
                 "today": "Today",

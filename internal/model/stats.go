@@ -5,6 +5,7 @@ type StatsMetrics struct {
 	OutputToken      int64   `json:"output_token" gorm:"bigint"`
 	ProbeInputToken  int64   `json:"probe_input_token" gorm:"bigint"`
 	ProbeOutputToken int64   `json:"probe_output_token" gorm:"bigint"`
+	ProbeCount       int64   `json:"probe_count" gorm:"bigint"`
 	InputCost        float64 `json:"input_cost" gorm:"type:real"`
 	OutputCost       float64 `json:"output_cost" gorm:"type:real"`
 	ProbeCost        float64 `json:"probe_cost" gorm:"type:real"`
@@ -52,6 +53,7 @@ func (s *StatsMetrics) Add(delta StatsMetrics) {
 	s.OutputToken += delta.OutputToken
 	s.ProbeInputToken += delta.ProbeInputToken
 	s.ProbeOutputToken += delta.ProbeOutputToken
+	s.ProbeCount += delta.ProbeCount
 	s.InputCost += delta.InputCost
 	s.OutputCost += delta.OutputCost
 	s.ProbeCost += delta.ProbeCost

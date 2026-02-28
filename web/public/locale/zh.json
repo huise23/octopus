@@ -86,6 +86,11 @@
         "chart": {
             "totalRequests": "请求次数",
             "totalCost": "消费金额",
+            "totalToken": "消耗 Token",
+            "inputToken": "输入 Token",
+            "outputToken": "输出 Token",
+            "retryCount": "重试次数",
+            "retryToken": "重试 Token",
             "timePeriod": "时间范围",
             "period": {
                 "today": "今天",
