@@ -65,6 +65,8 @@
             "waitTime": "等待时间",
             "totalToken": "消耗 Token",
             "totalCost": "消耗费用",
+            "probeToken": "探测 Token",
+            "probeCost": "探测费用",
             "noData": "无数据"
         },
         "total": {

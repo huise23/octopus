@@ -259,14 +259,6 @@ export function LogCard({ log }: { log: RelayLog }) {
                                         {t('cost')} {Number(log.cost).toFixed(6)}
                                     </span>
                                 </div>
-                                {(log.probe_input_tokens || log.probe_output_tokens) && (
-                                    <div className="flex items-center gap-1.5">
-                                        <RotateCw className="size-3.5 shrink-0 text-orange-500" />
-                                        <span className="text-orange-600 dark:text-orange-400">
-                                            {t('probe')} {(log.probe_input_tokens || 0) + (log.probe_output_tokens || 0)}
-                                        </span>
-                                    </div>
-                                )}
                             </div>
                             {hasError && (
                                 <div className="p-2.5 rounded-xl bg-destructive/10 border border-destructive/20 overflow-hidden">

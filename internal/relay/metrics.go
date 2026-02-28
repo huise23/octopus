@@ -142,6 +142,9 @@ func (m *RelayMetrics) saveStats(success bool, duration time.Duration) {
 	} else {
 		m.Stats.RequestFailed = 1
 	}
+	m.Stats.ProbeInputToken += int64(m.Probe.InputTokens)
+	m.Stats.ProbeOutputToken += int64(m.Probe.OutputTokens)
+	m.Stats.ProbeCost += m.Probe.Cost
 	m.Stats.WaitTime = duration.Milliseconds()
 
 	channelID, channelName := finalChannel(m.Attempts)
@@ -151,10 +154,11 @@ func (m *RelayMetrics) saveStats(success bool, duration time.Duration) {
 	op.StatsAPIKeyUpdate(m.APIKeyID, m.Stats)
 	op.StatsChannelUpdate(channelID, m.Stats)
 
-	log.Infof("relay complete: model=%s, channel=%d(%s), success=%t, duration=%dms, input_token=%d, output_token=%d, input_cost=%f, output_cost=%f, total_cost=%f, attempts=%d, probe=%d",
+	log.Infof("relay complete: model=%s, channel=%d(%s), success=%t, duration=%dms, input_token=%d, output_token=%d, input_cost=%f, output_cost=%f, total_cost=%f, probe_token=%d, probe_cost=%f, attempts=%d",
 		m.RequestModel, channelID, channelName, success, duration.Milliseconds(),
 		m.Stats.InputToken, m.Stats.OutputToken,
-		m.Stats.InputCost, m.Stats.OutputCost, m.Stats.InputCost+m.Stats.OutputCost, len(m.Attempts), m.Probe.InputTokens+m.Probe.OutputTokens)
+		m.Stats.InputCost, m.Stats.OutputCost, m.Stats.InputCost+m.Stats.OutputCost,
+		m.Stats.ProbeInputToken+m.Stats.ProbeOutputToken, m.Stats.ProbeCost, len(m.Attempts))
 
 // saveLog 保存日志
 func (m *RelayMetrics) saveLog(ctx context.Context, err error, duration time.Duration, successfulRound int) {

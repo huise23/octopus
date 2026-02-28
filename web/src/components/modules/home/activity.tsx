@@ -107,7 +107,7 @@ export function Activity() {
                                 return <div key={day.dateStr} />;
                             }
 
-                            const level = getActivityLevel(day.formatted?.request_count.raw ?? 0);
+                            const level = getActivityLevel(day.formatted?.probe_total_token.raw ?? 0);
 
                             return (
                                 <div
@@ -160,10 +160,8 @@ export function Activity() {
                                 {tooltip.day.formatted ? (
                                     <div className="grid grid-cols-[auto_1fr] gap-x-4 gap-y-1 items-center text-muted-foreground">
                                         {[
-                                            { labelKey: 'requestCount', ...tooltip.day.formatted.request_count },
-                                            { labelKey: 'waitTime', ...tooltip.day.formatted.wait_time },
-                                            { labelKey: 'totalToken', ...tooltip.day.formatted.total_token },
-                                            { labelKey: 'totalCost', ...tooltip.day.formatted.total_cost },
+                                            { labelKey: 'probeToken', ...tooltip.day.formatted.probe_total_token },
+                                            { labelKey: 'probeCost', ...tooltip.day.formatted.probe_cost },
                                         ].map((item, index) => (
                                             <Fragment key={index}>
                                                 <span className="wrap-break-word">{t(item.labelKey)}</span>

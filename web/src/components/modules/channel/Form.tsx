@@ -123,10 +123,7 @@ export function ChannelForm({
                 proxy: formData.proxy,
                 channel_proxy: formData.channel_proxy?.trim() || null,
                 match_regex: formData.match_regex.trim() || null,
-<<<<<<< HEAD
-=======
                 custom_header: formData.custom_header?.filter((h) => h.header_key.trim()) || [],
->>>>>>> upstream/master
             },
             {
                 onSuccess: (data) => {

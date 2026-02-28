@@ -65,6 +65,8 @@
             "waitTime": "Wait Time",
             "totalToken": "Tokens Used",
             "totalCost": "Total Cost",
+            "probeToken": "Probe Tokens",
+            "probeCost": "Probe Cost",
             "noData": "No Data"
         },
         "total": {

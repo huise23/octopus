@@ -8,8 +8,11 @@ import { formatCount, formatMoney, formatTime } from '@/lib/utils';
 interface StatsMetrics {
     input_token: number;
     output_token: number;
+    probe_input_token: number;
+    probe_output_token: number;
     input_cost: number;
     output_cost: number;
+    probe_cost: number;
     wait_time: number;
     request_success: number;
     request_failed: number;
@@ -18,8 +21,11 @@ interface StatsMetrics {
 export interface StatsMetricsFormatted {
     input_token: ReturnType<typeof formatCount>;
     output_token: ReturnType<typeof formatCount>;
+    probe_input_token: ReturnType<typeof formatCount>;
+    probe_output_token: ReturnType<typeof formatCount>;
     input_cost: ReturnType<typeof formatMoney>;
     output_cost: ReturnType<typeof formatMoney>;
+    probe_cost: ReturnType<typeof formatMoney>;
     wait_time: ReturnType<typeof formatTime>;
     request_success: ReturnType<typeof formatCount>;
     request_failed: ReturnType<typeof formatCount>;
@@ -27,6 +33,7 @@ export interface StatsMetricsFormatted {
     request_count: ReturnType<typeof formatCount>;
     total_token: ReturnType<typeof formatCount>;
     total_cost: ReturnType<typeof formatMoney>;
+    probe_total_token: ReturnType<typeof formatCount>;
 }
 
 export interface StatsChannel extends StatsMetrics {
@@ -90,9 +97,13 @@ export function useStatsDaily() {
             input_token: formatCount(item.input_token),
             output_token: formatCount(item.output_token),
             total_token: formatCount(item.input_token + item.output_token),
+            probe_input_token: formatCount(item.probe_input_token),
+            probe_output_token: formatCount(item.probe_output_token),
+            probe_total_token: formatCount(item.probe_input_token + item.probe_output_token),
             input_cost: formatMoney(item.input_cost),
             output_cost: formatMoney(item.output_cost),
             total_cost: formatMoney(item.input_cost + item.output_cost),
+            probe_cost: formatMoney(item.probe_cost),
             wait_time: formatTime(item.wait_time),
             request_success: formatCount(item.request_success),
             request_failed: formatCount(item.request_failed),
@@ -118,9 +129,13 @@ export function useStatsHourly() {
             input_token: formatCount(item.input_token),
             output_token: formatCount(item.output_token),
             total_token: formatCount(item.input_token + item.output_token),
+            probe_input_token: formatCount(item.probe_input_token),
+            probe_output_token: formatCount(item.probe_output_token),
+            probe_total_token: formatCount(item.probe_input_token + item.probe_output_token),
             input_cost: formatMoney(item.input_cost),
             output_cost: formatMoney(item.output_cost),
             total_cost: formatMoney(item.input_cost + item.output_cost),
+            probe_cost: formatMoney(item.probe_cost),
             wait_time: formatTime(item.wait_time),
             request_success: formatCount(item.request_success),
             request_failed: formatCount(item.request_failed),
@@ -141,9 +156,13 @@ export function useStatsTotal() {
             input_token: formatCount(data.input_token),
             output_token: formatCount(data.output_token),
             total_token: formatCount(data.input_token + data.output_token),
+            probe_input_token: formatCount(data.probe_input_token),
+            probe_output_token: formatCount(data.probe_output_token),
+            probe_total_token: formatCount(data.probe_input_token + data.probe_output_token),
             input_cost: formatMoney(data.input_cost),
             output_cost: formatMoney(data.output_cost),
             total_cost: formatMoney(data.input_cost + data.output_cost),
+            probe_cost: formatMoney(data.probe_cost),
             wait_time: formatTime(data.wait_time),
             request_success: formatCount(data.request_success),
             request_failed: formatCount(data.request_failed),
@@ -170,9 +189,13 @@ export function useStatsAPIKey() {
             input_token: formatCount(item.input_token),
             output_token: formatCount(item.output_token),
             total_token: formatCount(item.input_token + item.output_token),
+            probe_input_token: formatCount(item.probe_input_token),
+            probe_output_token: formatCount(item.probe_output_token),
+            probe_total_token: formatCount(item.probe_input_token + item.probe_output_token),
             input_cost: formatMoney(item.input_cost),
             output_cost: formatMoney(item.output_cost),
             total_cost: formatMoney(item.input_cost + item.output_cost),
+            probe_cost: formatMoney(item.probe_cost),
             wait_time: formatTime(item.wait_time),
             request_success: formatCount(item.request_success),
             request_failed: formatCount(item.request_failed),
