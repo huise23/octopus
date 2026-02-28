@@ -33,15 +33,15 @@ type RelayMetrics struct {
 	Stats model.StatsMetrics
 
 	// 重试信息
-    Attempts []model.ChannelAttempt
+	Attempts []model.ChannelAttempt
 
-    // 探测重试的 token/费用统计
-    Probe ProbeStats
+	// 探测重试的 token/费用统计
+	Probe ProbeStats
 }
 type ProbeStats struct {
-    InputTokens  int
-    OutputTokens int
-    Cost         float64
+	InputTokens  int
+	OutputTokens int
+	Cost         float64
 }
 
 // NewRelayMetrics 创建新的 RelayMetrics
@@ -147,7 +147,7 @@ func (m *RelayMetrics) saveStats(success bool, duration time.Duration) {
 	m.Stats.ProbeCost += m.Probe.Cost
 	m.Stats.WaitTime = duration.Milliseconds()
 
-	channelID, channelName := finalChannel(m.Attempts)
+	channelID, channelName := finalChannel(m.Attempts, m.ChannelID, m.ChannelName)
 	op.StatsTotalUpdate(m.Stats)
 	op.StatsHourlyUpdate(m.Stats)
 	op.StatsDailyUpdate(context.Background(), m.Stats)
@@ -159,6 +159,8 @@ func (m *RelayMetrics) saveStats(success bool, duration time.Duration) {
 		m.Stats.InputToken, m.Stats.OutputToken,
 		m.Stats.InputCost, m.Stats.OutputCost, m.Stats.InputCost+m.Stats.OutputCost,
 		m.Stats.ProbeInputToken+m.Stats.ProbeOutputToken, m.Stats.ProbeCost, len(m.Attempts))
+
+}
 
 // saveLog 保存日志
 func (m *RelayMetrics) saveLog(ctx context.Context, err error, duration time.Duration, successfulRound int) {
@@ -209,7 +211,7 @@ func (m *RelayMetrics) saveLog(ctx context.Context, err error, duration time.Dur
 		}
 	}
 
-    // 设置错误信息
+	// 设置错误信息
 	if err != nil {
 		relayLog.Error = err.Error()
 	}
@@ -222,6 +224,22 @@ func (m *RelayMetrics) saveLog(ctx context.Context, err error, duration time.Dur
 	if logErr := op.RelayLogAdd(ctx, relayLog); logErr != nil {
 		log.Warnf("failed to save relay log: %v", logErr)
 	}
+}
+
+func finalChannel(attempts []model.ChannelAttempt, fallbackID int, fallbackName string) (int, string) {
+	if len(attempts) == 0 {
+		return fallbackID, fallbackName
+	}
+	for i := len(attempts) - 1; i >= 0; i-- {
+		if attempts[i].Success {
+			return attempts[i].ChannelID, attempts[i].ChannelName
+		}
+	}
+	last := attempts[len(attempts)-1]
+	if last.ChannelID != 0 || last.ChannelName != "" {
+		return last.ChannelID, last.ChannelName
+	}
+	return fallbackID, fallbackName
 }
 
 // filterResponseForLog 创建响应的浅拷贝，过滤掉 images 和 MultipleContent 中的图片数据以减少存储压力

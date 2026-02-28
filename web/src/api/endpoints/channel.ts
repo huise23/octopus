@@ -126,6 +126,7 @@ export type FetchModelRequest = {
     proxy?: boolean;
     channel_proxy?: string | null;
     match_regex?: string | null;
+    custom_header?: CustomHeader[];
 };
 
 /**
