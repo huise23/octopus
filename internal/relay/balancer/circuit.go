@@ -5,6 +5,7 @@ import (
 	"sync"
 	"time"
 
+	"github.com/bestruirui/octopus/internal/model"
 	"github.com/bestruirui/octopus/internal/utils/log"
 )
 
@@ -29,6 +30,53 @@ type circuitEntry struct {
 
 // 全局熔断器存储
 var globalBreaker sync.Map // key: string -> value: *circuitEntry
+
+// RestoreFromDB restores circuit breaker state from persistent storage.
+func RestoreFromDB(states []model.CircuitBreakerState) {
+	for _, state := range states {
+		key := circuitKey(state.ChannelID, state.ChannelKeyID, state.ModelName)
+		entry := getOrCreateEntry(key)
+		entry.mu.Lock()
+		entry.State = CircuitState(state.State)
+		entry.Failures = state.Failures
+		entry.RateLimitFailures = state.RateLimitFailures
+		entry.LastFailureTime = state.LastFailureTime
+		if state.FailedDays == nil {
+			entry.FailedDays = make(map[string]bool)
+		} else {
+			entry.FailedDays = state.FailedDays
+		}
+		entry.PermanentBlock = state.PermanentBlock
+		entry.mu.Unlock()
+	}
+}
+
+// GetStateSnapshot returns a copy of circuit breaker state for persistence.
+func GetStateSnapshot(channelID, keyID int, modelName string) (model.CircuitBreakerState, bool) {
+	key := circuitKey(channelID, keyID, modelName)
+	v, ok := globalBreaker.Load(key)
+	if !ok {
+		return model.CircuitBreakerState{}, false
+	}
+	entry := v.(*circuitEntry)
+	entry.mu.Lock()
+	defer entry.mu.Unlock()
+	failedDays := make(map[string]bool, len(entry.FailedDays))
+	for k, v := range entry.FailedDays {
+		failedDays[k] = v
+	}
+	return model.CircuitBreakerState{
+		ChannelID:         channelID,
+		ChannelKeyID:      keyID,
+		ModelName:         modelName,
+		State:             int(entry.State),
+		Failures:          entry.Failures,
+		RateLimitFailures: entry.RateLimitFailures,
+		LastFailureTime:   entry.LastFailureTime,
+		FailedDays:        failedDays,
+		PermanentBlock:    entry.PermanentBlock,
+	}, true
+}
 
 // circuitKey 生成熔断器键：channelID:channelKeyID:modelName
 func circuitKey(channelID, keyID int, modelName string) string {

@@ -29,6 +29,12 @@ func init() {
 var hopByHopHeaders = map[string]bool{
 	"authorization":       true,
 	"x-api-key":           true,
+	"x-forwarded-for":     true,
+	"x-real-ip":           true,
+	"forwarded":           true,
+	"cf-connecting-ip":    true,
+	"true-client-ip":      true,
+	"x-client-ip":         true,
 	"connection":          true,
 	"keep-alive":          true,
 	"proxy-authenticate":  true,

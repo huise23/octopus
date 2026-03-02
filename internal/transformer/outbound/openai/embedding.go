@@ -12,6 +12,7 @@ import (
 	"strings"
 
 	"github.com/bestruirui/octopus/internal/transformer/model"
+	"github.com/bestruirui/octopus/internal/utils/log"
 )
 
 type EmbeddingOutbound struct{}
@@ -94,7 +95,21 @@ func (o *EmbeddingOutbound) TransformResponse(ctx context.Context, response *htt
 		return nil, fmt.Errorf("response body is empty")
 	}
 
-	// 先解析为 OpenAI 标准格式
+	// 先解析为 OpenAI 标准格式，防御性修复 id 类型
+	var raw map[string]any
+	if err := json.Unmarshal(body, &raw); err != nil {
+		return nil, fmt.Errorf("failed to unmarshal response: %w", err)
+	}
+	if id, ok := raw["id"]; ok {
+		if _, isStr := id.(string); !isStr {
+			log.Warnf("embedding response id is not string, got %T: %v", id, id)
+			raw["id"] = fmt.Sprintf("%v", id)
+		}
+	}
+	body, err = json.Marshal(raw)
+	if err != nil {
+		return nil, fmt.Errorf("failed to marshal response: %w", err)
+	}
 	var openAIResp OpenAIEmbeddingResponse
 	if err := json.Unmarshal(body, &openAIResp); err != nil {
 		return nil, fmt.Errorf("failed to unmarshal response: %w", err)

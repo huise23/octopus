@@ -11,6 +11,7 @@ import (
 	"strings"
 
 	"github.com/bestruirui/octopus/internal/transformer/model"
+	"github.com/bestruirui/octopus/internal/utils/log"
 )
 
 type ChatOutbound struct{}
@@ -67,6 +68,22 @@ func (o *ChatOutbound) TransformResponse(ctx context.Context, response *http.Res
 		return nil, fmt.Errorf("response body is empty")
 	}
 
+	// Defensive parsing: validate ID type before strict unmarshal
+	var raw map[string]any
+	if err := json.Unmarshal(body, &raw); err != nil {
+		return nil, fmt.Errorf("failed to unmarshal response: %w", err)
+	}
+	if id, ok := raw["id"]; ok {
+		if _, isStr := id.(string); !isStr {
+			log.Warnf("response id is not string, got %T: %v", id, id)
+			raw["id"] = fmt.Sprintf("%v", id)
+		}
+	}
+	body, err = json.Marshal(raw)
+	if err != nil {
+		return nil, fmt.Errorf("failed to marshal response: %w", err)
+	}
+
 	var resp model.InternalLLMResponse
 	if err := json.Unmarshal(body, &resp); err != nil {
 		return nil, fmt.Errorf("failed to unmarshal response: %w", err)
@@ -90,9 +107,24 @@ func (o *ChatOutbound) TransformStream(ctx context.Context, eventData []byte) (*
 		}
 	}
 
-	var resp model.InternalLLMResponse
-	if err := json.Unmarshal(eventData, &resp); err != nil {
+	var raw map[string]any
+	if err := json.Unmarshal(eventData, &raw); err != nil {
 		return nil, fmt.Errorf("failed to unmarshal stream chunk: %w", err)
+	}
+	if id, ok := raw["id"]; ok {
+		if _, isStr := id.(string); !isStr {
+			log.Warnf("stream response id is not string, got %T: %v", id, id)
+			raw["id"] = fmt.Sprintf("%v", id)
+		}
+	}
+	safeChunk, err := json.Marshal(raw)
+	if err != nil {
+		return nil, fmt.Errorf("failed to marshal stream chunk: %w", err)
+	}
+
+	var resp model.InternalLLMResponse
+	if err := json.Unmarshal(safeChunk, &resp); err != nil {
+		return nil, fmt.Errorf("failed to unmarshal stream chunk after validation: %w", err)
 	}
 	return &resp, nil
 }

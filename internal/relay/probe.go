@@ -147,6 +147,7 @@ func RetryUnavailableForChannel(
 
 			if err == nil {
 				balancer.RecordSuccess(ch.ID, key.ID, probeReq.Model)
+				persistCircuitState(context.Background(), ch.ID, key.ID, probeReq.Model)
 				if usage != nil && metrics != nil {
 					metrics.Probe.InputTokens += int(usage.PromptTokens)
 					metrics.Probe.OutputTokens += int(usage.CompletionTokens)
@@ -160,6 +161,7 @@ func RetryUnavailableForChannel(
 			} else {
 				log.Warnf("probe for channel %d key %d failed: %v", ch.ID, key.ID, err)
 				balancer.RecordFailureWithStatus(ch.ID, key.ID, probeReq.Model, statusCode)
+				persistCircuitState(context.Background(), ch.ID, key.ID, probeReq.Model)
 			}
 		}
 	}()

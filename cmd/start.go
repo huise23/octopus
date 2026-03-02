@@ -1,6 +1,8 @@
 package cmd
 
 import (
+	"context"
+
 	"github.com/bestruirui/octopus/internal/conf"
 	"github.com/bestruirui/octopus/internal/db"
 	"github.com/bestruirui/octopus/internal/op"
@@ -35,6 +37,11 @@ var startCmd = &cobra.Command{
 			return
 		}
 		shutdown.Register(op.SaveCache)
+
+		if err := op.CircuitInit(context.Background()); err != nil {
+			log.Errorf("circuit init error: %v", err)
+			return
+		}
 
 		if err := op.UserInit(); err != nil {
 			log.Errorf("user init error: %v", err)

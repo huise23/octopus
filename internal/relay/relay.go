@@ -148,6 +148,7 @@ func Handler(inboundType inbound.InboundType, c *gin.Context) {
 				// 成功
 				attemptDuration := time.Since(attemptStart)
 				metrics.AddAttempt(round+1, i+1, true, nil, attemptDuration)
+				persistCircuitState(c.Request.Context(), channel.ID, rc.usedKey.ID, item.ModelName)
 				rc.collectResponse()
 				rc.usedKey.StatusCode = statusCode
 				rc.usedKey.LastUseTimeStamp = time.Now().Unix()
@@ -160,6 +161,7 @@ func Handler(inboundType inbound.InboundType, c *gin.Context) {
 				attemptDuration := time.Since(attemptStart)
 				metrics.AddAttempt(round+1, i+1, false, err, attemptDuration)
 				balancer.RecordFailureWithStatus(channel.ID, rc.usedKey.ID, item.ModelName, statusCode)
+				persistCircuitState(c.Request.Context(), channel.ID, rc.usedKey.ID, item.ModelName)
 				rc.usedKey.StatusCode = statusCode
 				rc.usedKey.LastUseTimeStamp = time.Now().Unix()
 				op.ChannelKeyUpdate(rc.usedKey)
