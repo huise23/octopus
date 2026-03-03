@@ -259,3 +259,36 @@ func RelayLogClear(ctx context.Context) error {
 	relayLogCacheLock.Unlock()
 	return db.GetDB().WithContext(ctx).Where("1 = 1").Delete(&model.RelayLog{}).Error
 }
+
+func RelayLogGetByID(ctx context.Context, id int64) (*model.RelayLog, error) {
+	relayLogCacheLock.Lock()
+	for i := len(relayLogCache) - 1; i >= 0; i-- {
+		if relayLogCache[i].ID == id {
+			logCopy := relayLogCache[i]
+			relayLogCacheLock.Unlock()
+			return &logCopy, nil
+		}
+	}
+	relayLogCacheLock.Unlock()
+
+	var dbLog model.RelayLog
+	if err := db.GetDB().WithContext(ctx).Where("id = ?", id).First(&dbLog).Error; err != nil {
+		return nil, err
+	}
+
+	return &dbLog, nil
+}
+
+func RelayLogSummaryList(ctx context.Context, startTime, endTime *int, page, pageSize int) ([]model.RelayLogSummary, error) {
+	logs, err := RelayLogList(ctx, startTime, endTime, page, pageSize)
+	if err != nil {
+		return nil, err
+	}
+
+	summaries := make([]model.RelayLogSummary, 0, len(logs))
+	for _, logItem := range logs {
+		summaries = append(summaries, model.ToRelayLogSummary(logItem))
+	}
+
+	return summaries, nil
+}

@@ -13,24 +13,68 @@ type ChannelAttempt struct {
 }
 
 type RelayLog struct {
-	ID               int64             `json:"id" gorm:"primaryKey;autoIncrement:false"` // Snowflake ID
-	Time             int64             `json:"time"`                                     // 时间戳（秒）
-	RequestModelName string            `json:"request_model_name"`                       // 请求模型名称
-	ChannelId        int               `json:"channel"`                                  // 实际使用的渠道ID
-	ChannelName      string            `json:"channel_name"`                             // 渠道名称
-	ActualModelName  string            `json:"actual_model_name"`                        // 实际使用模型名称
-	InputTokens      int               `json:"input_tokens"`                             // 输入Token
-	OutputTokens     int               `json:"output_tokens"`                            // 输出 Token
-	Ftut             int               `json:"ftut"`                                     // 首字时间(毫秒)
-	UseTime          int               `json:"use_time"`                                 // 总用时(毫秒)
-	Cost             float64           `json:"cost"`                                     // 消耗费用
-	RequestContent   string            `json:"request_content"`                          // 请求内容
-	ResponseContent  string            `json:"response_content"`                         // 响应内容
-	Error            string            `json:"error"`                                    // 错误信息
-	Attempts         []ChannelAttempt  `json:"attempts" gorm:"serializer:json"`          // 所有尝试记录
-	TotalAttempts    int               `json:"total_attempts"`                           // 总尝试次数
-	SuccessfulRound  int               `json:"successful_round"`                         // 成功的轮次
-	ProbeInputTokens  int     `json:"probe_input_tokens" db:"probe_input_tokens"`   // 探测请求的输入token
-	ProbeOutputTokens int     `json:"probe_output_tokens" db:"probe_output_tokens"` // 探测请求的输出token
-	ProbeCost         float64 `json:"probe_cost" db:"probe_cost"`                   // 探测请求的费用
+	ID                int64            `json:"id" gorm:"primaryKey;autoIncrement:false"`     // Snowflake ID
+	Time              int64            `json:"time"`                                         // 时间戳（秒）
+	RequestModelName  string           `json:"request_model_name"`                           // 请求模型名称
+	ChannelId         int              `json:"channel"`                                      // 实际使用的渠道ID
+	ChannelName       string           `json:"channel_name"`                                 // 渠道名称
+	ActualModelName   string           `json:"actual_model_name"`                            // 实际使用模型名称
+	InputTokens       int              `json:"input_tokens"`                                 // 输入Token
+	OutputTokens      int              `json:"output_tokens"`                                // 输出 Token
+	Ftut              int              `json:"ftut"`                                         // 首字时间(毫秒)
+	UseTime           int              `json:"use_time"`                                     // 总用时(毫秒)
+	Cost              float64          `json:"cost"`                                         // 消耗费用
+	RequestContent    string           `json:"request_content"`                              // 请求内容
+	ResponseContent   string           `json:"response_content"`                             // 响应内容
+	Error             string           `json:"error"`                                        // 错误信息
+	Attempts          []ChannelAttempt `json:"attempts" gorm:"serializer:json"`              // 所有尝试记录
+	TotalAttempts     int              `json:"total_attempts"`                               // 总尝试次数
+	SuccessfulRound   int              `json:"successful_round"`                             // 成功的轮次
+	ProbeInputTokens  int              `json:"probe_input_tokens" db:"probe_input_tokens"`   // 探测请求的输入token
+	ProbeOutputTokens int              `json:"probe_output_tokens" db:"probe_output_tokens"` // 探测请求的输出token
+	ProbeCost         float64          `json:"probe_cost" db:"probe_cost"`                   // 探测请求的费用
+}
+
+type RelayLogSummary struct {
+	ID                int64            `json:"id"`
+	Time              int64            `json:"time"`
+	RequestModelName  string           `json:"request_model_name"`
+	ChannelId         int              `json:"channel"`
+	ChannelName       string           `json:"channel_name"`
+	ActualModelName   string           `json:"actual_model_name"`
+	InputTokens       int              `json:"input_tokens"`
+	OutputTokens      int              `json:"output_tokens"`
+	Ftut              int              `json:"ftut"`
+	UseTime           int              `json:"use_time"`
+	Cost              float64          `json:"cost"`
+	Error             string           `json:"error"`
+	Attempts          []ChannelAttempt `json:"attempts"`
+	TotalAttempts     int              `json:"total_attempts"`
+	SuccessfulRound   int              `json:"successful_round"`
+	ProbeInputTokens  int              `json:"probe_input_tokens"`
+	ProbeOutputTokens int              `json:"probe_output_tokens"`
+	ProbeCost         float64          `json:"probe_cost"`
+}
+
+func ToRelayLogSummary(log RelayLog) RelayLogSummary {
+	return RelayLogSummary{
+		ID:                log.ID,
+		Time:              log.Time,
+		RequestModelName:  log.RequestModelName,
+		ChannelId:         log.ChannelId,
+		ChannelName:       log.ChannelName,
+		ActualModelName:   log.ActualModelName,
+		InputTokens:       log.InputTokens,
+		OutputTokens:      log.OutputTokens,
+		Ftut:              log.Ftut,
+		UseTime:           log.UseTime,
+		Cost:              log.Cost,
+		Error:             log.Error,
+		Attempts:          log.Attempts,
+		TotalAttempts:     log.TotalAttempts,
+		SuccessfulRound:   log.SuccessfulRound,
+		ProbeInputTokens:  log.ProbeInputTokens,
+		ProbeOutputTokens: log.ProbeOutputTokens,
+		ProbeCost:         log.ProbeCost,
+	}
 }

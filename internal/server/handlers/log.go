@@ -6,6 +6,9 @@ import (
 	"net/http"
 	"strconv"
 
+	"github.com/bestruirui/octopus/internal/model"
+	"gorm.io/gorm"
+
 	"github.com/bestruirui/octopus/internal/op"
 	"github.com/bestruirui/octopus/internal/server/middleware"
 	"github.com/bestruirui/octopus/internal/server/resp"
@@ -19,6 +22,10 @@ func init() {
 		AddRoute(
 			router.NewRoute("/list", http.MethodGet).
 				Handle(listLog),
+		).
+		AddRoute(
+			router.NewRoute("/detail", http.MethodGet).
+				Handle(detailLog),
 		).
 		AddRoute(
 			router.NewRoute("/clear", http.MethodDelete).
@@ -65,13 +72,39 @@ func listLog(c *gin.Context) {
 		endTime = &et
 	}
 
-	logs, err := op.RelayLogList(c.Request.Context(), startTime, endTime, page, pageSize)
+	logs, err := op.RelayLogSummaryList(c.Request.Context(), startTime, endTime, page, pageSize)
 	if err != nil {
 		resp.Error(c, http.StatusInternalServerError, err.Error())
 		return
 	}
 
 	resp.Success(c, logs)
+}
+
+func detailLog(c *gin.Context) {
+	idStr := c.Query("id")
+	if idStr == "" {
+		resp.Error(c, http.StatusBadRequest, "id is required")
+		return
+	}
+
+	id, err := strconv.ParseInt(idStr, 10, 64)
+	if err != nil || id <= 0 {
+		resp.Error(c, http.StatusBadRequest, "invalid id")
+		return
+	}
+
+	logItem, err := op.RelayLogGetByID(c.Request.Context(), id)
+	if err != nil {
+		if err == gorm.ErrRecordNotFound {
+			resp.Error(c, http.StatusNotFound, "log not found")
+			return
+		}
+		resp.Error(c, http.StatusInternalServerError, err.Error())
+		return
+	}
+
+	resp.Success(c, logItem)
 }
 
 func clearLog(c *gin.Context) {
@@ -118,7 +151,7 @@ func streamLog(c *gin.Context) {
 			if !ok {
 				return
 			}
-			data, err := json.Marshal(log)
+			data, err := json.Marshal(model.ToRelayLogSummary(log))
 			if err != nil {
 				continue
 			}

@@ -44,6 +44,12 @@ export interface RelayLog {
     probe_cost?: number;          // 探测请求的费用
 }
 
+export type RelayLogSummary = Omit<RelayLog, 'request_content' | 'response_content'>;
+
+export async function getLogDetail(id: number): Promise<RelayLog> {
+    return apiClient.get<RelayLog>(`/api/v1/log/detail?id=${String(id)}`);
+}
+
 /**
  * 日志列表查询参数
  */
@@ -110,7 +116,7 @@ export function useLogs(options: { pageSize?: number } = {}) {
             const params = new URLSearchParams();
             params.set('page', String(pageParam));
             params.set('page_size', String(pageSize));
-            const result = await apiClient.get<RelayLog[] | null>(`/api/v1/log/list?${params.toString()}`);
+            const result = await apiClient.get<RelayLogSummary[] | null>(`/api/v1/log/list?${params.toString()}`);
             return result ?? [];
         },
         getNextPageParam: (lastPage, allPages) => {
@@ -124,7 +130,7 @@ export function useLogs(options: { pageSize?: number } = {}) {
     const logs = useMemo(() => {
         const pages = logsQuery.data?.pages ?? [];
         const seen = new Set<number>();
-        const merged: RelayLog[] = [];
+        const merged: RelayLogSummary[] = [];
 
         for (const page of pages) {
             for (const log of page) {
@@ -167,10 +173,10 @@ export function useLogs(options: { pageSize?: number } = {}) {
 
                 eventSource.onmessage = (event) => {
                     try {
-                        const log: RelayLog = JSON.parse(event.data);
+                        const log: RelayLogSummary = JSON.parse(event.data);
                         queryClient.setQueryData(
                             logsInfiniteQueryKey(pageSize),
-                            (old: InfiniteData<RelayLog[], number> | undefined) => {
+                            (old: InfiniteData<RelayLogSummary[], number> | undefined) => {
                                 if (!old) {
                                     return { pages: [[log]], pageParams: [1] };
                                 }

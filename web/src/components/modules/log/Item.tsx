@@ -1,6 +1,7 @@
 'use client';
 
 import { useMemo, useState, useEffect } from 'react';
+import { useQuery } from '@tanstack/react-query';
 import { Clock, Cpu, Zap, AlertCircle, ArrowDownToLine, ArrowUpFromLine, DollarSign, ArrowRight, ArrowDown, Send, MessageSquare, Loader2, RotateCw, ChevronDown, ChevronUp } from 'lucide-react';
 import { useTranslations } from 'next-intl';
 import { motion, AnimatePresence } from 'motion/react';
@@ -8,7 +9,7 @@ import JsonView from '@uiw/react-json-view';
 import { githubDarkTheme } from '@uiw/react-json-view/githubDark';
 import { githubLightTheme } from '@uiw/react-json-view/githubLight';
 import { useTheme } from 'next-themes';
-import { type RelayLog, type ChannelAttempt } from '@/api/endpoints/log';
+import { getLogDetail, type RelayLogSummary, type ChannelAttempt } from '@/api/endpoints/log';
 import { getModelIcon } from '@/lib/model-icons';
 import { Badge } from '@/components/ui/badge';
 import { cn } from '@/lib/utils';
@@ -184,15 +185,25 @@ function DeferredJsonContent({ content, fallbackText }: { content: string | unde
     );
 }
 
-export function LogCard({ log }: { log: RelayLog }) {
+export function LogCard({ log }: { log: RelayLogSummary }) {
     const t = useTranslations('log.card');
     const { Avatar: ModelAvatar, color: brandColor } = useMemo(
         () => getModelIcon(log.actual_model_name),
         [log.actual_model_name]
     );
 
-    const hasError = !!log.error;
-    const hasMultipleAttempts = log.attempts && log.attempts.length > 1;
+    const [detailOpen, setDetailOpen] = useState(false);
+    const { data: detail } = useQuery({
+        queryKey: ['log-detail', log.id],
+        queryFn: () => getLogDetail(log.id),
+        enabled: detailOpen,
+        staleTime: 1000 * 60,
+    });
+
+    const detailLog = detail ?? log;
+
+    const hasError = !!detailLog.error;
+    const hasMultipleAttempts = detailLog.attempts && detailLog.attempts.length > 1;
     const [isDiagnosticExpanded, setIsDiagnosticExpanded] = useState(false);
 
     return (
@@ -205,7 +216,10 @@ export function LogCard({ log }: { log: RelayLog }) {
                         hasError ? "border-destructive/40" : "border-border",
                     )}
                 >
-                    <div className={cn("p-4 grid grid-cols-[auto_1fr] gap-4", hasError ? "items-start" : "items-center")}>
+                    <div
+                        className={cn("p-4 grid grid-cols-[auto_1fr] gap-4", hasError ? "items-start" : "items-center")}
+                        onClick={() => setDetailOpen(true)}
+                    >
                         <ModelAvatar size={40} />
                         <div className="min-w-0 flex flex-col gap-3">
                             <div className="flex items-center gap-2 min-w-0 text-sm">
@@ -262,7 +276,7 @@ export function LogCard({ log }: { log: RelayLog }) {
                             </div>
                             {hasError && (
                                 <div className="p-2.5 rounded-xl bg-destructive/10 border border-destructive/20 overflow-hidden">
-                                    <p className="text-xs text-destructive line-clamp-2">{log.error}</p>
+                                    <p className="text-xs text-destructive line-clamp-2">{detailLog.error}</p>
                                 </div>
                             )}
                         </div>
@@ -278,9 +292,9 @@ export function LogCard({ log }: { log: RelayLog }) {
                             <ArrowRight className="size-3.5 text-muted-foreground/50" />
                             {hasMultipleAttempts ? (
                                 <RetryBadgeWithTooltip
-                                    channelName={log.channel_name}
+                                    channelName={detailLog.channel_name}
                                     brandColor={brandColor}
-                                    attempts={log.attempts!}
+                                    attempts={detailLog.attempts!}
                                 />
                             ) : (
                                 <Badge
@@ -364,7 +378,7 @@ export function LogCard({ log }: { log: RelayLog }) {
                                                                     />
                                                                 </div>
                                                                 <p className="text-sm text-destructive whitespace-pre-wrap wrap-break-word pr-8 leading-relaxed">
-                                                                    {log.error}
+                                                                    {detailLog.error}
                                                                 </p>
                                                             </div>
                                                         )}
@@ -418,7 +432,7 @@ export function LogCard({ log }: { log: RelayLog }) {
                                                 </Badge>
                                             </div>
                                             <div className="flex-1 overflow-auto min-h-0">
-                                                <DeferredJsonContent content={log.request_content} fallbackText={t('noRequestContent')} />
+                                                    <DeferredJsonContent content={detail?.request_content} fallbackText={t('noRequestContent')} />
                                             </div>
                                         </div>
                                         <div className="flex flex-col rounded-2xl border border-border bg-muted/30 overflow-hidden min-h-0">
@@ -430,7 +444,7 @@ export function LogCard({ log }: { log: RelayLog }) {
                                                 </Badge>
                                             </div>
                                             <div className="flex-1 overflow-auto min-h-0">
-                                                <DeferredJsonContent content={log.response_content} fallbackText={t('noResponseContent')} />
+                                                    <DeferredJsonContent content={detail?.response_content} fallbackText={t('noResponseContent')} />
                                             </div>
                                         </div>
                                     </div>

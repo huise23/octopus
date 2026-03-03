@@ -73,6 +73,10 @@ func (o *ResponseOutbound) TransformResponse(ctx context.Context, response *http
 		return nil, fmt.Errorf("response body is empty")
 	}
 
+	if normalized, err := normalizeResponseIDs(body); err == nil {
+		body = normalized
+	}
+
 	// Check for error response
 	if response.StatusCode >= 400 {
 		var errResp struct {
@@ -99,6 +103,10 @@ func (o *ResponseOutbound) TransformResponse(ctx context.Context, response *http
 func (o *ResponseOutbound) TransformStream(ctx context.Context, eventData []byte) (*model.InternalLLMResponse, error) {
 	if len(eventData) == 0 {
 		return nil, nil
+	}
+
+	if normalized, err := normalizeResponseIDs(eventData); err == nil {
+		eventData = normalized
 	}
 
 	// Handle [DONE] marker
@@ -251,6 +259,40 @@ func (o *ResponseOutbound) TransformStream(ctx context.Context, eventData []byte
 	}
 
 	return resp, nil
+}
+
+func normalizeResponseIDs(payload []byte) ([]byte, error) {
+	var raw map[string]any
+	if err := json.Unmarshal(payload, &raw); err != nil {
+		return nil, err
+	}
+	normalizeIDFields(raw)
+	return json.Marshal(raw)
+}
+
+func normalizeIDFields(value any) {
+	switch typed := value.(type) {
+	case map[string]any:
+		for key, inner := range typed {
+			switch key {
+			case "id", "call_id":
+				switch v := inner.(type) {
+				case string:
+					// ok
+				case nil:
+					// ok
+				default:
+					typed[key] = fmt.Sprintf("%v", v)
+				}
+			default:
+				normalizeIDFields(inner)
+			}
+		}
+	case []any:
+		for _, item := range typed {
+			normalizeIDFields(item)
+		}
+	}
 }
 
 // ResponsesRequest represents the OpenAI Responses API request format.
